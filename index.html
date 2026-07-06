@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -1678,7 +1679,7 @@ const app = createApp({
     });
     const aiChatArea = ref(null);
 
-    const COZE_LINK = 'https://www.coze.cn/s/7658197353966338344/';
+    // 不自动跳转，用户手动打开扣子对话窗口
 
     const moduleAIConfig = {
       mod1: {
@@ -1766,16 +1767,13 @@ const app = createApp({
         setTimeout(() => {
           aiModal.messages.push({
             role: 'bot',
-            text: `✅ 指令已复制到剪贴板！<br><br>已为你打开 AI 助手对话窗口，请将剪贴板内容粘贴发送即可执行操作。<br><br>即将跳转...`,
+            text: `✅ 指令已复制到剪贴板！<br><br>请前往扣子(Coze)对话窗口，将指令粘贴发送给「超卷小助手」即可执行飞书操作。<br><br>💡 <a href='https://www.coze.cn' target='_blank' style='color:#722ed1;text-decoration:underline'>点击打开 Coze</a>`,
           });
           aiModal.sending = false;
           setTimeout(() => {
             if (aiChatArea.value) aiChatArea.value.scrollTop = aiChatArea.value.scrollHeight;
           }, 50);
-          // Open Coze link in new tab
-          setTimeout(() => {
-            window.open(COZE_LINK, '_blank');
-          }, 1500);
+          // 不自动跳转，让用户自行打开扣子对话
         }, 800);
       }).catch(() => {
         // Clipboard failed, still provide the link

@@ -1459,9 +1459,30 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helv
         function executeMod2Check() {
           buildDisplayFields(mod2);
           const orderField = mod2.fieldMap['订单号'];
+          
+          // 检查字段映射
+          if (!orderField) {
+            alert('请先配置"订单号"字段映射');
+            return;
+          }
+          
           // 尝试从模块1获取已导入的订单数据
           const orders = mod1.data;
           const orderFieldMod1 = mod1.fieldMap['订单号'];
+          
+          // 检查模块1是否有数据
+          if (!orders || orders.length === 0) {
+            alert('⚠️ 请先在"📦 订单追踪"模块导入订单数据，然后再进行走货核对。');
+            mod2.hasResult = false;
+            return;
+          }
+          
+          // 检查模块1的字段映射
+          if (!orderFieldMod1) {
+            alert('⚠️ "订单追踪"模块未配置"订单号"字段映射，请先完成字段映射配置。');
+            mod2.hasResult = false;
+            return;
+          }
 
           let matched = 0;
           let unmatched = 0;
@@ -1481,7 +1502,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helv
 
           filtered.forEach(row => {
             const orderNo = String(row[orderField] || '').trim();
-            if (!orderNo || !orderFieldMod1 || orders.length === 0) {
+            if (!orderNo) {
               row._matched = false;
               unmatched++;
               return;
@@ -1495,7 +1516,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helv
           mod2.matched = matched;
           mod2.unmatched = unmatched;
           mod2.hasResult = true;
-        }        // ===== 模块3: 走货登记 =====
+        }
+        // ===== 模块3: 走货登记 =====
         function executeMod3Register() {
           const orderFieldA = mod3.fieldMapA['订单号'];
           const orderFieldB = mod3.fieldMapB['订单号'];

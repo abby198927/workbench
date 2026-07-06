@@ -369,6 +369,41 @@
           </div>
         </div>
 
+        <!-- 数据预览 -->
+        <div v-if="mod1.orderHeaders.length > 0 || mod1.shippingHeaders.length > 0" class="card" style="margin-bottom:16px">
+          <div class="card-title">📋 数据预览</div>
+          <!-- 订单数据预览 -->
+          <div v-if="mod1.orderHeaders.length > 0" style="margin-bottom:16px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:#1890ff">📋 订单数据列映射</div>
+            <div style="font-size:12px;color:#595959;margin-bottom:8px;line-height:1.8">
+              <span v-for="(val, key) in mod1.orderColMapping" :key="key" style="display:inline-block;margin-right:16px">
+                <strong>{{ key }}:</strong> <span :style="{color: val.includes('未找到') ? '#ff4d4f' : '#52c41a'}">{{ val }}</span>
+              </span>
+            </div>
+            <div class="table-container" style="max-height:150px;overflow:auto">
+              <table class="data-table">
+                <thead><tr><th v-for="h in mod1.orderHeaders" :key="h" style="white-space:nowrap">{{ h }}</th></tr></thead>
+                <tbody><tr v-for="(row, i) in mod1.orderPreviewRows" :key="i"><td v-for="h in mod1.orderHeaders" :key="h" style="white-space:nowrap">{{ row[h] }}</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+          <!-- 走货数据预览 -->
+          <div v-if="mod1.shippingHeaders.length > 0">
+            <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:#722ed1">📦 走货数据列映射</div>
+            <div style="font-size:12px;color:#595959;margin-bottom:8px;line-height:1.8">
+              <span v-for="(val, key) in mod1.shippingColMapping" :key="key" style="display:inline-block;margin-right:16px">
+                <strong>{{ key }}:</strong> <span :style="{color: val.includes('未找到') ? '#ff4d4f' : '#52c41a'}">{{ val }}</span>
+              </span>
+            </div>
+            <div class="table-container" style="max-height:150px;overflow:auto">
+              <table class="data-table">
+                <thead><tr><th v-for="h in mod1.shippingHeaders" :key="h" style="white-space:nowrap">{{ h }}</th></tr></thead>
+                <tbody><tr v-for="(row, i) in mod1.shippingPreviewRows" :key="i"><td v-for="h in mod1.shippingHeaders" :key="h" style="white-space:nowrap">{{ row[h] }}</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <!-- Action buttons -->
         <div class="card">
           <div class="card-title">操作区</div>
@@ -962,6 +997,13 @@ const app = createApp({
       shippingData: [],
       orderData: [],
       result: null,
+      // 数据预览
+      orderHeaders: [],
+      orderPreviewRows: [],
+      shippingHeaders: [],
+      shippingPreviewRows: [],
+      orderColMapping: {},
+      shippingColMapping: {},
       // 确认执行状态
       confirmed: false,
       confirmedAction: '',
@@ -1022,16 +1064,16 @@ const app = createApp({
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
         if (!row || row.length === 0) continue;
-        const sku = skuIdx >= 0 ? String(row[skuIdx] || '') : '';
+        const sku = skuIdx >= 0 ? String(row[skuIdx] || '').trim().toUpperCase() : '';
         const qty = qtyIdx >= 0 ? parseInt(row[qtyIdx]) || 0 : 0;
         if (!sku || qty <= 0) continue;
         result.push({
-          contract: contractIdx >= 0 ? String(row[contractIdx] || '') : '',
-          container: containerIdx >= 0 ? String(row[containerIdx] || '') : '',
+          contract: contractIdx >= 0 ? String(row[contractIdx] || '').trim() : '',
+          container: containerIdx >= 0 ? String(row[containerIdx] || '').trim() : '',
           sku: sku,
           qty: qty,
-          deadline: deadlineIdx >= 0 ? String(row[deadlineIdx] || '') : '',
-          shipping: shippingIdx >= 0 ? String(row[shippingIdx] || '') : '',
+          deadline: deadlineIdx >= 0 ? String(row[deadlineIdx] || '').trim() : '',
+          shipping: shippingIdx >= 0 ? String(row[shippingIdx] || '').trim() : '',
         });
       }
       return result;
@@ -1057,14 +1099,14 @@ const app = createApp({
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
         if (!row || row.length === 0) continue;
-        const sku = skuIdx >= 0 ? String(row[skuIdx] || '') : '';
-        const container = containerIdx >= 0 ? String(row[containerIdx] || '') : '';
-        if (!sku || !container) continue;
+        const sku = skuIdx >= 0 ? String(row[skuIdx] || '').trim().toUpperCase() : '';
+        const container = containerIdx >= 0 ? String(row[containerIdx] || '').trim() : '';
+        if (!sku) continue;
         result.push({
           container: container,
           sku: sku,
           qty: qtyIdx >= 0 ? parseInt(row[qtyIdx]) || 0 : 0,
-          date: dateIdx >= 0 ? String(row[dateIdx] || '') : '',
+          date: dateIdx >= 0 ? String(row[dateIdx] || '').trim() : '',
         });
       }
       return result;
@@ -1286,28 +1328,55 @@ const app = createApp({
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
           if (jsonData.length > 0) {
-            mod1.orderData = jsonData.map(row => {
-              const headers = Object.keys(row);
-              const findCol = (keywords) => {
-                for (const h of headers) {
-                  for (const kw of keywords) {
-                    if (h.includes(kw)) return row[h];
-                  }
+            // 保存原始表头和前5行用于预览
+            const rawHeaders = Object.keys(jsonData[0]);
+            mod1.orderHeaders = rawHeaders;
+            mod1.orderPreviewRows = jsonData.slice(0, 5);
+
+            // 辅助函数：找到映射到的实际列名
+            const findColName = (keywords) => {
+              for (const h of rawHeaders) {
+                for (const kw of keywords) {
+                  if (h.includes(kw)) return h;
                 }
-                return '';
-              };
+              }
+              return null;
+            };
+            const findColVal = (row, keywords) => {
+              for (const h of rawHeaders) {
+                for (const kw of keywords) {
+                  if (h.includes(kw)) return row[h];
+                }
+              }
+              return '';
+            };
+
+            // 记录列映射结果
+            mod1.orderColMapping = {
+              '合同号': findColName(['合同号', '合同']) || '⚠️ 未找到',
+              '货柜号': findColName(['货柜号', '货柜']) || '⚠️ 未找到',
+              'SKU': findColName(['SKU', 'sku', '型号']) || '⚠️ 未找到',
+              '数量': findColName(['数量', '走货数量', '计划走货数量']) || '⚠️ 未找到',
+              '交期': findColName(['交期', '货好时间', '交货日期']) || '(可选)',
+              '船期': findColName(['船期', '开船时间', '计划开船时间']) || '(可选)',
+            };
+
+            mod1.orderData = jsonData.map(row => {
               return {
-                contract: findCol(['合同号', '合同']),
-                container: findCol(['货柜号', '货柜']),
-                sku: findCol(['SKU', 'sku', '型号']),
-                qty: parseInt(findCol(['数量', '走货数量', '计划走货数量'])) || 0,
-                deadline: findCol(['交期', '货好时间', '交货日期']),
-                shipping: findCol(['船期', '开船时间', '计划开船时间']),
+                contract: String(findColVal(row, ['合同号', '合同']) || '').trim(),
+                container: String(findColVal(row, ['货柜号', '货柜']) || '').trim(),
+                sku: String(findColVal(row, ['SKU', 'sku', '型号']) || '').trim().toUpperCase(),
+                qty: parseInt(findColVal(row, ['数量', '走货数量', '计划走货数量'])) || 0,
+                deadline: String(findColVal(row, ['交期', '货好时间', '交货日期']) || '').trim(),
+                shipping: String(findColVal(row, ['船期', '开船时间', '计划开船时间']) || '').trim(),
               };
             }).filter(r => r.sku && r.qty > 0);
+
+            mod1.orderSourceDesc = '本地Excel: ' + file.name + ' (' + mod1.orderData.length + '条有效数据)';
           }
         } catch (err) {
           console.warn('Excel解析失败:', err);
+          alert('订单Excel解析失败: ' + err.message);
         }
       };
       reader.readAsArrayBuffer(file);
@@ -1344,26 +1413,50 @@ const app = createApp({
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
           if (jsonData.length > 0) {
-            mod1.shippingData = jsonData.map(row => {
-              const headers = Object.keys(row);
-              const findCol = (keywords) => {
-                for (const h of headers) {
-                  for (const kw of keywords) {
-                    if (h.includes(kw)) return row[h];
-                  }
+            // 保存原始表头和前5行用于预览
+            const rawHeaders = Object.keys(jsonData[0]);
+            mod1.shippingHeaders = rawHeaders;
+            mod1.shippingPreviewRows = jsonData.slice(0, 5);
+
+            const findColName = (keywords) => {
+              for (const h of rawHeaders) {
+                for (const kw of keywords) {
+                  if (h.includes(kw)) return h;
                 }
-                return '';
-              };
+              }
+              return null;
+            };
+            const findColVal = (row, keywords) => {
+              for (const h of rawHeaders) {
+                for (const kw of keywords) {
+                  if (h.includes(kw)) return row[h];
+                }
+              }
+              return '';
+            };
+
+            // 记录列映射结果
+            mod1.shippingColMapping = {
+              '货柜号': findColName(['货柜号', '货柜']) || '⚠️ 未找到',
+              'SKU': findColName(['SKU', 'sku', '型号']) || '⚠️ 未找到',
+              '走货数量': findColName(['计划走货数量', '走货数量', '数量']) || '⚠️ 未找到',
+              '开船时间': findColName(['计划开船时间', '开船时间', '船期']) || '(可选)',
+            };
+
+            mod1.shippingData = jsonData.map(row => {
               return {
-                container: findCol(['货柜号', '货柜']),
-                sku: findCol(['SKU', 'sku', '型号']),
-                qty: parseInt(findCol(['计划走货数量', '走货数量', '数量'])) || 0,
-                date: findCol(['计划开船时间', '开船时间', '船期']),
+                container: String(findColVal(row, ['货柜号', '货柜']) || '').trim(),
+                sku: String(findColVal(row, ['SKU', 'sku', '型号']) || '').trim().toUpperCase(),
+                qty: parseInt(findColVal(row, ['计划走货数量', '走货数量', '数量'])) || 0,
+                date: String(findColVal(row, ['计划开船时间', '开船时间', '船期']) || '').trim(),
               };
-            }).filter(r => r.sku && r.container);
+            }).filter(r => r.sku);  // 仅要求SKU非空，货柜号可选
+
+            mod1.shippingSourceDesc = '本地Excel: ' + file.name + ' (' + mod1.shippingData.length + '条有效数据)';
           }
         } catch (err) {
           console.warn('Excel解析失败:', err);
+          alert('走货Excel解析失败: ' + err.message);
         }
       };
       reader.readAsArrayBuffer(file);
@@ -1414,33 +1507,81 @@ const app = createApp({
 
       const errors = [];
       const items = [];
-      
+
+      // 构建 SKU 索引（大小写已统一为 toUpperCase）
+      const orderSkuMap = {};
+      orderData.forEach(o => {
+        const key = o.sku;
+        if (!orderSkuMap[key]) orderSkuMap[key] = [];
+        orderSkuMap[key].push(o);
+      });
+
+      // 跟踪每个订单已用数量（同一SKU可能对应多条订单）
+      const orderUsedQty = {};
+
       shippingData.forEach((s, i) => {
-        const order = orderData.find(o => o.sku === s.sku && o.container === s.container);
-        if (order) {
-          if (s.qty === order.qty) {
+        const skuKey = s.sku;
+        const candidates = orderSkuMap[skuKey];
+
+        if (!candidates || candidates.length === 0) {
+          // 在订单中未找到此SKU
+          errors.push({
+            valid: false,
+            field: `${s.container || '-'} / ${s.sku}`,
+            message: `SKU "${s.sku}" 在订单明细表中未找到`,
+            type: '未匹配'
+          });
+          return;
+        }
+
+        // 在候选订单中查找还有剩余数量的订单
+        let matched = false;
+        for (const order of candidates) {
+          const orderKey = order.contract + '|' + order.sku + '|' + order.container;
+          const used = orderUsedQty[orderKey] || 0;
+          const remaining = order.qty - used;
+
+          if (remaining >= s.qty) {
+            // 完全匹配
+            orderUsedQty[orderKey] = used + s.qty;
             items.push({
               contract: order.contract,
-              container: s.container,
+              container: s.container || order.container,
               sku: s.sku,
               shippingQty: s.qty,
               orderQty: order.qty,
             });
-            errors.push({ valid: true, message: `${s.container} / ${s.sku} 匹配成功`, type: '正常' });
-          } else {
+            matched = true;
+            break;
+          } else if (remaining > 0) {
+            // 部分匹配：剩余数量不够，但取走剩余部分
+            orderUsedQty[orderKey] = order.qty;
+            items.push({
+              contract: order.contract,
+              container: s.container || order.container,
+              sku: s.sku,
+              shippingQty: remaining,
+              orderQty: order.qty,
+            });
+            // 剩余部分记为错误
+            const leftover = s.qty - remaining;
             errors.push({
               valid: false,
-              field: `${s.container} / ${s.sku}`,
-              message: `走货数量(${s.qty})与订单数量(${order.qty})不一致`,
-              type: '数量不匹配'
+              field: `${s.container || '-'} / ${s.sku}`,
+              message: `走货数量(${s.qty})超出订单剩余量(剩余${remaining}，溢出${leftover})`,
+              type: '数量溢出'
             });
+            matched = true;
+            break;
           }
-        } else {
+        }
+
+        if (!matched) {
           errors.push({
             valid: false,
-            field: `${s.container} / ${s.sku}`,
-            message: `在订单明细表中未找到匹配的SKU`,
-            type: '未匹配'
+            field: `${s.container || '-'} / ${s.sku}`,
+            message: `SKU "${s.sku}" 的订单数量已全部用完，无法匹配走货数量(${s.qty})`,
+            type: '订单已耗尽'
           });
         }
       });
@@ -1578,6 +1719,12 @@ const app = createApp({
       mod1.shippingData = [];
       mod1.orderData = [];
       mod1.result = null;
+      mod1.orderHeaders = [];
+      mod1.orderPreviewRows = [];
+      mod1.shippingHeaders = [];
+      mod1.shippingPreviewRows = [];
+      mod1.orderColMapping = {};
+      mod1.shippingColMapping = {};
       mod1.confirmed = false;
       mod1.confirmedAction = '';
       mod1.confirmedText = '';

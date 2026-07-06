@@ -21,9 +21,6 @@
     .header-logo .title { color: #fff; font-size: 18px; font-weight: 600; letter-spacing: 1px; }
     .header-right { margin-left: auto; display: flex; align-items: center; gap: 16px; color: rgba(255,255,255,0.75); font-size: 13px; }
     .header-badge { background: #1890ff; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
-    .btn-ai-assistant { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: linear-gradient(135deg, #722ed1, #eb2f96); color: #fff; border-radius: 16px; font-size: 13px; font-weight: 500; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 6px rgba(114,46,209,0.3); }
-    .btn-ai-assistant:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(114,46,209,0.4); color: #fff; }
-    .btn-ai-assistant span { font-size: 16px; }
     
     /* Layout */
     .layout { display: flex; margin-top: 56px; min-height: calc(100vh - 56px); }
@@ -175,6 +172,38 @@
     /* Module transition */
     .module-content { animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* AI Assistant button in operation area */
+    .btn-ai { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; background: linear-gradient(135deg, #722ed1, #eb2f96); color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 6px rgba(114,46,209,0.3); }
+    .btn-ai:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(114,46,209,0.4); }
+    .btn-ai:active { transform: translateY(0); }
+    
+    /* AI Chat Modal */
+    .ai-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
+    .ai-modal { width: 520px; max-width: 90vw; height: 600px; max-height: 80vh; background: #fff; border-radius: 12px; box-shadow: 0 12px 48px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden; }
+    .ai-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: linear-gradient(135deg, #722ed1, #eb2f96); color: #fff; }
+    .ai-modal-header .ai-title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; }
+    .ai-modal-header .ai-close { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.2); border: none; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+    .ai-modal-header .ai-close:hover { background: rgba(255,255,255,0.3); }
+    .ai-chat-area { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; background: #fafafa; }
+    .ai-msg { display: flex; gap: 8px; max-width: 85%; }
+    .ai-msg.bot { align-self: flex-start; }
+    .ai-msg.user { align-self: flex-end; flex-direction: row-reverse; }
+    .ai-msg .ai-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .ai-msg.bot .ai-avatar { background: linear-gradient(135deg, #722ed1, #eb2f96); }
+    .ai-msg.user .ai-avatar { background: #1890ff; color: #fff; font-size: 12px; }
+    .ai-msg .ai-bubble { padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.6; word-break: break-word; }
+    .ai-msg.bot .ai-bubble { background: #fff; color: #333; border: 1px solid #f0f0f0; border-top-left-radius: 4px; }
+    .ai-msg.user .ai-bubble { background: #1890ff; color: #fff; border-top-right-radius: 4px; }
+    .ai-quick-actions { padding: 8px 20px; border-top: 1px solid #f0f0f0; background: #fff; display: flex; gap: 6px; flex-wrap: wrap; }
+    .ai-quick-btn { padding: 4px 10px; border: 1px solid #d9d9d9; border-radius: 14px; font-size: 12px; color: #595959; background: #fff; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .ai-quick-btn:hover { color: #722ed1; border-color: #722ed1; }
+    .ai-input-area { display: flex; gap: 8px; padding: 12px 20px; border-top: 1px solid #f0f0f0; background: #fff; }
+    .ai-input-area input { flex: 1; padding: 10px 14px; border: 1px solid #d9d9d9; border-radius: 8px; font-size: 13px; outline: none; }
+    .ai-input-area input:focus { border-color: #722ed1; box-shadow: 0 0 0 2px rgba(114,46,209,0.1); }
+    .ai-input-area button { padding: 10px 18px; background: linear-gradient(135deg, #722ed1, #eb2f96); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
+    .ai-input-area button:hover { opacity: 0.9; }
+    .ai-input-area button:disabled { opacity: 0.5; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -188,9 +217,6 @@
     <div class="header-right">
       <span class="header-badge">纯前端版</span>
       <span>数据操作由 AI Agent 执行</span>
-      <a href="https://www.coze.cn/s/7658197353966338344/" target="_blank" class="btn-ai-assistant">
-        <span>🤖</span> AI助手
-      </a>
     </div>
   </div>
 
@@ -323,6 +349,7 @@
               🔍 执行拆解试运行
             </button>
             <button class="btn" @click="mod1Reset">🔄 重置</button>
+            <button class="btn-ai" @click="openAI('mod1')">🤖 AI助手执行操作</button>
           </div>
         </div>
 
@@ -507,6 +534,7 @@
               ✅ 确认登记
             </button>
             <button class="btn" @click="mod2Reset">🔄 重置</button>
+            <button class="btn-ai" @click="openAI('mod2')">🤖 AI助手执行操作</button>
           </div>
         </div>
 
@@ -587,6 +615,7 @@
               ✅ 确认登记
             </button>
             <button class="btn" @click="mod3Reset">🔄 重置</button>
+            <button class="btn-ai" @click="openAI('mod3')">🤖 AI助手执行操作</button>
           </div>
         </div>
 
@@ -706,6 +735,7 @@
               📤 确认登记
             </button>
             <button class="btn" @click="mod4Reset">🔄 重置</button>
+            <button class="btn-ai" @click="openAI('mod4')">🤖 AI助手执行操作</button>
           </div>
         </div>
 
@@ -813,6 +843,7 @@ SU-26206-2CD149B-250套，尾数15套</code>
               📤 确认登记
             </button>
             <button class="btn" @click="mod5Reset">🔄 重置</button>
+            <button class="btn-ai" @click="openAI('mod5')">🤖 AI助手执行操作</button>
           </div>
         </div>
 
@@ -840,6 +871,35 @@ SU-26206-2CD149B-250套，尾数15套</code>
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- AI Assistant Modal -->
+  <div class="ai-modal-overlay" v-if="aiModal.show" @click.self="closeAI">
+    <div class="ai-modal">
+      <div class="ai-modal-header">
+        <div class="ai-title">🤖 AI助手 - {{ aiModal.moduleName }}</div>
+        <button class="ai-close" @click="closeAI">✕</button>
+      </div>
+      <div class="ai-chat-area" ref="aiChatArea">
+        <div class="ai-msg bot">
+          <div class="ai-avatar">🤖</div>
+          <div class="ai-bubble">{{ aiModal.welcome }}</div>
+        </div>
+        <template v-for="(msg, i) in aiModal.messages" :key="i">
+          <div class="ai-msg" :class="msg.role">
+            <div class="ai-avatar">{{ msg.role === 'user' ? '👤' : '🤖' }}</div>
+            <div class="ai-bubble" v-html="msg.text"></div>
+          </div>
+        </template>
+      </div>
+      <div class="ai-quick-actions" v-if="aiModal.quickActions.length > 0">
+        <button class="ai-quick-btn" v-for="(action, i) in aiModal.quickActions" :key="i" @click="sendAI(action.cmd)">{{ action.label }}</button>
+      </div>
+      <div class="ai-input-area">
+        <input v-model="aiModal.inputText" @keyup.enter="sendAI()" placeholder="输入操作指令..." :disabled="aiModal.sending">
+        <button @click="sendAI()" :disabled="!aiModal.inputText.trim() || aiModal.sending">发送</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1605,6 +1665,133 @@ const app = createApp({
       mod5.remainderSummary = [];
     }
 
+    // ===== AI Assistant Modal =====
+    const aiModal = reactive({
+      show: false,
+      module: '',
+      moduleName: '',
+      welcome: '',
+      inputText: '',
+      messages: [],
+      quickActions: [],
+      sending: false,
+    });
+    const aiChatArea = ref(null);
+
+    const COZE_LINK = 'https://www.coze.cn/s/7658197353966338344/';
+
+    const moduleAIConfig = {
+      mod1: {
+        name: '走货匹配拆解',
+        welcome: '你好！我可以帮你执行走货匹配拆解的飞书表读写操作。\n\n请描述你要执行的操作，或点击下方快捷按钮。我会将指令发送到 AI Agent 执行飞书写入。',
+        quickActions: [
+          { label: '📖 读取订单表数据', cmd: '请帮我读取 HAHS 2026年订单走货计划表的数据' },
+          { label: '📖 读取走货表数据', cmd: '请帮我读取 HAHS 7月走货表的数据' },
+          { label: '✅ 确认写入拆解结果', cmd: '请确认写入拆解结果到飞书表' },
+          { label: '📊 查看走船计划', cmd: '请帮我查看26年走船计划表' },
+        ],
+      },
+      mod2: {
+        name: '订单明细录入',
+        welcome: '你好！我可以帮你将订单数据录入飞书表格。\n\n请描述你要录入的内容，或点击下方快捷按钮。',
+        quickActions: [
+          { label: '📝 录入HAHS订单', cmd: '请将订单数据录入到 HAHS 2026年订单走货计划表' },
+          { label: '📝 录入JSPCWY订单', cmd: '请将订单数据录入到 JSPCWY 2026年订单走货计划表' },
+          { label: '📖 查看已录入数据', cmd: '请帮我查看当前订单表中的数据' },
+        ],
+      },
+      mod3: {
+        name: '货柜计划登记',
+        welcome: '你好！我可以帮你将货柜计划数据从8月货柜计划表写入26年走船计划表。\n\n请描述你的操作需求，或点击下方快捷按钮。',
+        quickActions: [
+          { label: '📥 加载货柜计划', cmd: '请帮我从8月货柜计划表加载数据' },
+          { label: '✅ 确认写入走船计划', cmd: '请将货柜数据写入26年走船计划表' },
+          { label: '📖 查看走船计划', cmd: '请帮我查看当前26年走船计划表的内容' },
+        ],
+      },
+      mod4: {
+        name: '工厂下线数据',
+        welcome: '你好！我可以帮你录入工厂下线数据到飞书表格。\n\n请描述你要录入的数据，或点击下方快捷按钮。',
+        quickActions: [
+          { label: '📝 录入下线数据', cmd: '请帮我将工厂下线数据录入飞书表' },
+          { label: '📖 查看已录入数据', cmd: '请帮我查看当前工厂下线数据表' },
+        ],
+      },
+      mod5: {
+        name: '质检验货数据',
+        welcome: '你好！我可以帮你录入质检验货数据到飞书表格，支持尾数处理。\n\n请描述你要录入的数据，或点击下方快捷按钮。',
+        quickActions: [
+          { label: '📝 录入质检数据', cmd: '请帮我将质检验货数据录入飞书表' },
+          { label: '📦 处理尾数数据', cmd: '请帮我处理质检尾数数据' },
+          { label: '📖 查看质检记录', cmd: '请帮我查看当前质检记录' },
+        ],
+      },
+    };
+
+    function openAI(moduleKey) {
+      const config = moduleAIConfig[moduleKey];
+      if (!config) return;
+      aiModal.module = moduleKey;
+      aiModal.moduleName = config.name;
+      aiModal.welcome = config.welcome;
+      aiModal.quickActions = config.quickActions || [];
+      aiModal.messages = [];
+      aiModal.inputText = '';
+      aiModal.show = true;
+      aiModal.sending = false;
+    }
+
+    function closeAI() {
+      aiModal.show = false;
+    }
+
+    function sendAI(cmd) {
+      const text = cmd || aiModal.inputText.trim();
+      if (!text) return;
+
+      // Add user message
+      aiModal.messages.push({ role: 'user', text: text });
+      aiModal.inputText = '';
+      aiModal.sending = true;
+
+      // Scroll to bottom
+      setTimeout(() => {
+        if (aiChatArea.value) aiChatArea.value.scrollTop = aiChatArea.value.scrollHeight;
+      }, 50);
+
+      // Copy command to clipboard and open Coze link
+      const fullCmd = `【${aiModal.moduleName}】${text}`;
+      navigator.clipboard.writeText(fullCmd).then(() => {
+        // Simulate bot response
+        setTimeout(() => {
+          aiModal.messages.push({
+            role: 'bot',
+            text: `✅ 指令已复制到剪贴板！<br><br>已为你打开 AI 助手对话窗口，请将剪贴板内容粘贴发送即可执行操作。<br><br>即将跳转...`,
+          });
+          aiModal.sending = false;
+          setTimeout(() => {
+            if (aiChatArea.value) aiChatArea.value.scrollTop = aiChatArea.value.scrollHeight;
+          }, 50);
+          // Open Coze link in new tab
+          setTimeout(() => {
+            window.open(COZE_LINK, '_blank');
+          }, 1500);
+        }, 800);
+      }).catch(() => {
+        // Clipboard failed, still provide the link
+        setTimeout(() => {
+          aiModal.messages.push({
+            role: 'bot',
+            text: `⚠️ 剪贴板复制失败，请手动复制以下指令：<br><br><code style="background:#f5f5f5;padding:8px;border-radius:4px;display:block;font-size:12px;word-break:break-all">${fullCmd}</code><br>点击下方按钮打开 AI 助手对话窗口，将上方内容粘贴发送。`,
+          });
+          aiModal.sending = false;
+          setTimeout(() => {
+            if (aiChatArea.value) aiChatArea.value.scrollTop = aiChatArea.value.scrollHeight;
+          }, 50);
+        }, 800);
+      });
+    }
+
     return {
       sidebarCollapsed, currentModule, menuItems,
       presetTables, shippingPlanTable,
@@ -1626,6 +1813,8 @@ const app = createApp({
       // Module 5
       mod5, mod5ValidCount, mod5InvalidCount,
       mod5Parse, mod5Validate, mod5Confirm, mod5Reset,
+      // AI Assistant
+      aiModal, aiChatArea, openAI, closeAI, sendAI,
     };
   }
 });

@@ -477,6 +477,7 @@
           </div>
         </div>
       </div>
+
       <!-- Module 2: 订单明细录入 -->
       <div v-if="currentModule === 1" class="module-content">
         <div class="page-header">
@@ -503,6 +504,7 @@
           </div>
         </div>
 
+        <!-- Target table selection -->
         <div class="card">
           <div class="card-title">目标飞书表</div>
           <div class="form-group">
@@ -514,10 +516,11 @@
           </div>
           <div class="form-group">
             <label class="form-label">或手动输入飞书表链接</label>
-            <input class="form-input" v-model="mod2.customUrl" placeholder="粘贴飞书多维表格链接">
+            <input class="form-input" v-model="mod2.customUrl" placeholder="粘贴飞书多维表格链接，如 https://xxx.feishu.cn/base/xxx">
           </div>
         </div>
 
+        <!-- Upload area -->
         <div class="card">
           <div class="card-title">上传Excel文件</div>
           <div class="upload-area" @click="triggerFileUpload" @dragover.prevent @drop.prevent="handleFileDrop">
@@ -529,6 +532,7 @@
           </div>
         </div>
 
+        <!-- Preview -->
         <div class="card" v-if="mod2.parsedData.length > 0">
           <div class="card-title">数据预览 ({{ mod2.parsedData.length }} 条记录)</div>
           <div class="alert alert-info" v-if="mod2.fieldMapping.length > 0">
@@ -551,15 +555,21 @@
           </div>
         </div>
 
+        <!-- Actions -->
         <div class="card">
           <div class="card-title">操作区</div>
           <div class="btn-group">
-            <button class="btn btn-primary" @click="mod2Preview" :disabled="mod2.parsedData.length === 0 || (!mod2.selectedTable && !mod2.customUrl)">👁️ 预览</button>
-            <button class="btn btn-success" @click="mod2Confirm" :disabled="mod2.step < 3">✅ 确认登记</button>
+            <button class="btn btn-primary" @click="mod2Preview" :disabled="mod2.parsedData.length === 0 || (!mod2.selectedTable && !mod2.customUrl)">
+              👁️ 预览
+            </button>
+            <button class="btn btn-success" @click="mod2Confirm" :disabled="mod2.step < 3">
+              ✅ 确认登记
+            </button>
             <button class="btn" @click="mod2Reset">🔄 重置</button>
           </div>
         </div>
 
+        <!-- Result -->
         <div v-if="mod2.result" class="card">
           <div class="card-title">登记结果</div>
           <div class="result-panel">
@@ -577,7 +587,9 @@
                 </div>
               </div>
             </div>
-            <div class="alert alert-info" style="margin-top:12px">💡 请在对话中发送指令执行实际写入操作，当前结果仅为前端模拟。</div>
+            <div class="alert alert-info" style="margin-top:12px">
+              💡 请在对话中发送指令执行实际写入操作，当前结果仅为前端模拟。
+            </div>
           </div>
         </div>
       </div>
@@ -604,6 +616,7 @@
           </div>
         </div>
 
+        <!-- Config -->
         <div class="card">
           <div class="card-title">数据源配置</div>
           <div class="grid-2">
@@ -618,18 +631,25 @@
           </div>
         </div>
 
+        <!-- Actions -->
         <div class="card">
           <div class="card-title">操作区</div>
           <div class="btn-group">
             <button class="btn btn-primary" @click="mod3Load" :disabled="mod3.step > 1">
-              <span v-if="mod3.loading" class="spinner"></span>📥 加载计划
+              <span v-if="mod3.loading" class="spinner"></span>
+              📥 加载计划
             </button>
-            <button class="btn btn-success" @click="mod3Preview" :disabled="mod3.step !== 2">👁️ 预览</button>
-            <button class="btn btn-warning" @click="mod3Confirm" :disabled="mod3.step !== 2 || !mod3.previewed">✅ 确认登记</button>
+            <button class="btn btn-success" @click="mod3Preview" :disabled="mod3.step !== 2">
+              👁️ 预览
+            </button>
+            <button class="btn btn-warning" @click="mod3Confirm" :disabled="mod3.step !== 2 || !mod3.previewed">
+              ✅ 确认登记
+            </button>
             <button class="btn" @click="mod3Reset">🔄 重置</button>
           </div>
         </div>
 
+        <!-- Preview table -->
         <div v-if="mod3.planData.length > 0" class="card">
           <div class="card-title">待写入数据预览 ({{ mod3.planData.length }} 条)</div>
           <div class="table-container" style="max-height: 500px; overflow: auto;">
@@ -651,6 +671,7 @@
           </div>
         </div>
 
+        <!-- Result -->
         <div v-if="mod3.result" class="card">
           <div class="card-title">登记结果</div>
           <div class="result-panel">
@@ -687,6 +708,7 @@
           </div>
         </div>
 
+        <!-- Target table -->
         <div class="card">
           <div class="card-title">目标飞书表</div>
           <select class="form-select" v-model="mod4.selectedTable">
@@ -695,15 +717,20 @@
           </select>
         </div>
 
+        <!-- Input -->
         <div class="card">
           <div class="card-title">输入数据</div>
-          <div class="alert alert-info">📝 每行一条记录，格式为：<strong>合同号-SKU-完成数量</strong></div>
-          <div class="alert alert-warning">💡 示例：<br>
+          <div class="alert alert-info">
+            📝 每行一条记录，格式为：<strong>合同号-SKU-完成数量</strong>
+          </div>
+          <div class="alert alert-warning">
+            💡 示例：<br>
             <code style="display:block;margin-top:4px;line-height:1.8">26210-1ST064B-301<br>26210-1ST064H-301<br>26210-1ST064X-183</code>
           </div>
           <textarea class="form-textarea" v-model="mod4.inputText" rows="10" placeholder="在此粘贴数据，每行一条..."></textarea>
         </div>
 
+        <!-- Validation result -->
         <div class="card" v-if="mod4.validationResults.length > 0">
           <div class="card-title">校验结果</div>
           <div class="result-stats" style="margin-bottom:16px">
@@ -712,7 +739,8 @@
             <div class="result-stat"><div class="stat-num">{{ mod4.validationResults.length }}</div><div class="stat-label">总计</div></div>
           </div>
           <div class="validation-list">
-            <div class="validation-item" v-for="(item, i) in mod4.validationResults" :key="i" :class="item.valid ? 'success' : 'error'">
+            <div class="validation-item" v-for="(item, i) in mod4.validationResults" :key="i"
+                 :class="item.valid ? 'success' : 'error'">
               <span class="line-num">{{ i + 1 }}</span>
               <span class="line-content">{{ item.raw }}</span>
               <span class="status">
@@ -723,16 +751,24 @@
           </div>
         </div>
 
+        <!-- Actions -->
         <div class="card">
           <div class="card-title">操作区</div>
           <div class="btn-group">
-            <button class="btn btn-primary" @click="mod4Parse" :disabled="!mod4.inputText.trim()">🔍 解析</button>
-            <button class="btn btn-success" @click="mod4Validate" :disabled="mod4.validationResults.length === 0">✅ 校验</button>
-            <button class="btn btn-warning" @click="mod4Confirm" :disabled="mod4.validCount === 0 || !mod4.selectedTable">📤 确认登记</button>
+            <button class="btn btn-primary" @click="mod4Parse" :disabled="!mod4.inputText.trim()">
+              🔍 解析
+            </button>
+            <button class="btn btn-success" @click="mod4Validate" :disabled="mod4.validationResults.length === 0">
+              ✅ 校验
+            </button>
+            <button class="btn btn-warning" @click="mod4Confirm" :disabled="mod4.validCount === 0 || !mod4.selectedTable">
+              📤 确认登记
+            </button>
             <button class="btn" @click="mod4Reset">🔄 重置</button>
           </div>
         </div>
 
+        <!-- Result -->
         <div v-if="mod4.result" class="card">
           <div class="card-title">登记结果</div>
           <div class="result-panel">
@@ -740,7 +776,9 @@
               <div class="result-stat"><div class="stat-num" style="color:#52c41a">{{ mod4.result.success }}</div><div class="stat-label">成功</div></div>
               <div class="result-stat"><div class="stat-num" style="color:#ff4d4f">{{ mod4.result.failed }}</div><div class="stat-label">失败</div></div>
             </div>
-            <div class="alert alert-info" style="margin-top:12px">💡 请在对话中发送指令执行实际写入操作。</div>
+            <div class="alert alert-info" style="margin-top:12px">
+              💡 请在对话中发送指令执行实际写入操作。
+            </div>
           </div>
         </div>
       </div>
@@ -771,6 +809,7 @@
           </div>
         </div>
 
+        <!-- Target table -->
         <div class="card">
           <div class="card-title">目标飞书表</div>
           <select class="form-select" v-model="mod5.selectedTable">
@@ -779,10 +818,14 @@
           </select>
         </div>
 
+        <!-- Input -->
         <div class="card">
           <div class="card-title">输入数据</div>
-          <div class="alert alert-info">📝 每行一条记录，格式为：<strong>SU-{合同号}-{SKU}-{数量}套</strong>，可带尾数</div>
-          <div class="alert alert-warning">💡 示例：<br>
+          <div class="alert alert-info">
+            📝 每行一条记录，格式为：<strong>SU-{合同号}-{SKU}-{数量}套</strong>，可带尾数
+          </div>
+          <div class="alert alert-warning">
+            💡 示例：<br>
             <code style="display:block;margin-top:4px;line-height:1.8">
 SU-26206-2CD149Z-315套<br>
 SU-26208-2CD148B-259 尾数6套<br>
@@ -791,6 +834,7 @@ SU-26206-2CD149B-250套，尾数15套</code>
           <textarea class="form-textarea" v-model="mod5.inputText" rows="10" placeholder="在此粘贴数据，每行一条..."></textarea>
         </div>
 
+        <!-- Validation -->
         <div class="card" v-if="mod5.validationResults.length > 0">
           <div class="card-title">校验结果</div>
           <div class="result-stats" style="margin-bottom:16px">
@@ -799,7 +843,8 @@ SU-26206-2CD149B-250套，尾数15套</code>
             <div class="result-stat"><div class="stat-num">{{ mod5.validationResults.length }}</div><div class="stat-label">总计</div></div>
           </div>
           <div class="validation-list">
-            <div class="validation-item" v-for="(item, i) in mod5.validationResults" :key="i" :class="item.valid ? 'success' : 'error'">
+            <div class="validation-item" v-for="(item, i) in mod5.validationResults" :key="i"
+                 :class="item.valid ? 'success' : 'error'">
               <span class="line-num">{{ i + 1 }}</span>
               <span class="line-content">{{ item.raw }}</span>
               <span class="status">
@@ -813,16 +858,24 @@ SU-26206-2CD149B-250套，尾数15套</code>
           </div>
         </div>
 
+        <!-- Actions -->
         <div class="card">
           <div class="card-title">操作区</div>
           <div class="btn-group">
-            <button class="btn btn-primary" @click="mod5Parse" :disabled="!mod5.inputText.trim()">🔍 解析</button>
-            <button class="btn btn-success" @click="mod5Validate" :disabled="mod5.validationResults.length === 0">✅ 校验</button>
-            <button class="btn btn-warning" @click="mod5Confirm" :disabled="mod5.validCount === 0 || !mod5.selectedTable">📤 确认登记</button>
+            <button class="btn btn-primary" @click="mod5Parse" :disabled="!mod5.inputText.trim()">
+              🔍 解析
+            </button>
+            <button class="btn btn-success" @click="mod5Validate" :disabled="mod5.validationResults.length === 0">
+              ✅ 校验
+            </button>
+            <button class="btn btn-warning" @click="mod5Confirm" :disabled="mod5.validCount === 0 || !mod5.selectedTable">
+              📤 确认登记
+            </button>
             <button class="btn" @click="mod5Reset">🔄 重置</button>
           </div>
         </div>
 
+        <!-- Result -->
         <div v-if="mod5.result" class="card">
           <div class="card-title">登记结果</div>
           <div class="result-panel">
@@ -839,7 +892,9 @@ SU-26206-2CD149B-250套，尾数15套</code>
                 </div>
               </div>
             </div>
-            <div class="alert alert-info" style="margin-top:12px">💡 请在对话中发送指令执行实际写入操作。</div>
+            <div class="alert alert-info" style="margin-top:12px">
+              💡 请在对话中发送指令执行实际写入操作。
+            </div>
           </div>
         </div>
       </div>
@@ -847,6 +902,7 @@ SU-26206-2CD149B-250套，尾数15套</code>
     </div>
   </div>
 </div>
+
 <script>
 const { createApp, reactive, ref, computed } = Vue;
 
@@ -878,12 +934,14 @@ const app = createApp({
     // ===== Module 1: 走货匹配拆解 =====
     const mod1 = reactive({
       step: 1,
+      // 代理设置
       proxyUrl: localStorage.getItem('feishu_proxy_url') || '',
       proxyStatus: '',
       proxyExpanded: false,
       proxyLoading: false,
       targetToken: localStorage.getItem('feishu_target_token') || '',
       targetSheetId: localStorage.getItem('feishu_target_sheet_id') || '',
+      // 订单明细表数据源
       orderTable: '',
       orderSheetId: '',
       orderUrl: '',
@@ -891,6 +949,7 @@ const app = createApp({
       orderFileName: '',
       orderSource: '',
       orderSourceDesc: '',
+      // 走货明细表数据源
       shippingTable: '',
       shippingSheetId: '',
       shippingUrl: '',
@@ -898,10 +957,12 @@ const app = createApp({
       shippingFileName: '',
       shippingSource: '',
       shippingSourceDesc: '',
+      // 数据
       loading: false,
       shippingData: [],
       orderData: [],
       result: null,
+      // 确认执行状态
       confirmed: false,
       confirmedAction: '',
       confirmedText: '',
@@ -1063,12 +1124,14 @@ const app = createApp({
       }
     }
 
+    // 检查两个数据源是否都已配置
     const mod1Ready = computed(() => {
       const orderReady = (mod1.orderTable && mod1.orderSheetId) || mod1.orderUrl || mod1.orderFile;
       const shippingReady = (mod1.shippingTable && mod1.shippingSheetId) || mod1.shippingUrl || mod1.shippingFile;
       return orderReady && shippingReady;
     });
 
+    // 根据选中的预设表，计算可选的sheet列表
     const mod1OrderSheetOptions = computed(() => {
       if (!mod1.orderTable) return [];
       const table = presetTables.find(t => t.token === mod1.orderTable);
@@ -1081,6 +1144,7 @@ const app = createApp({
       return table ? table.sheets : [];
     });
 
+    // 选择预设表时的回调
     function onOrderTableChange() {
       mod1.orderUrl = '';
       mod1.orderSheetId = '';
@@ -1089,11 +1153,13 @@ const app = createApp({
       mod1.orderSource = '';
       mod1.orderSourceDesc = '';
       mod1.orderData = [];
+      // 如果该表只有一个sheet，自动选中
       const opts = mod1OrderSheetOptions.value;
       if (opts.length === 1) {
         mod1.orderSheetId = opts[0].id;
         updateOrderSourceDesc();
       }
+      // 如果代理已配置，自动通过代理读取数据
       if (mod1.proxyUrl && mod1.orderTable && mod1.orderSheetId) {
         fetchOrderFromProxy();
       }
@@ -1112,21 +1178,25 @@ const app = createApp({
         mod1.shippingSheetId = opts[0].id;
         updateShippingSourceDesc();
       }
+      // 如果代理已配置，自动通过代理读取数据
       if (mod1.proxyUrl && mod1.shippingTable && mod1.shippingSheetId) {
         fetchShippingFromProxy();
       }
     }
 
+    // URL输入回调：尝试自动提取sheet ID
     function onOrderUrlChange() {
       mod1.orderTable = '';
       mod1.orderFile = null;
       mod1.orderFileName = '';
       mod1.orderData = [];
+      // 尝试从URL提取sheet参数
       const match = mod1.orderUrl.match(/[?&]sheet=([^&#]+)/);
       if (match) {
         mod1.orderSheetId = match[1];
       }
       updateOrderSourceDesc();
+      // 如果代理已配置且有URL和sheetId，自动通过代理读取
       if (mod1.proxyUrl && mod1.orderUrl && mod1.orderSheetId) {
         fetchOrderFromProxy();
       }
@@ -1142,11 +1212,13 @@ const app = createApp({
         mod1.shippingSheetId = match[1];
       }
       updateShippingSourceDesc();
+      // 如果代理已配置且有URL和sheetId，自动通过代理读取
       if (mod1.proxyUrl && mod1.shippingUrl && mod1.shippingSheetId) {
         fetchShippingFromProxy();
       }
     }
 
+    // 更新数据源描述
     function updateOrderSourceDesc() {
       if (mod1.orderTable && mod1.orderSheetId) {
         const table = presetTables.find(t => t.token === mod1.orderTable);
@@ -1183,6 +1255,7 @@ const app = createApp({
       }
     }
 
+    // 订单明细表上传处理
     function triggerOrderUpload() {
       if (orderFileInput.value) orderFileInput.value.click();
     }
@@ -1240,6 +1313,7 @@ const app = createApp({
       reader.readAsArrayBuffer(file);
     }
 
+    // 走货明细表上传处理
     function triggerShippingUpload() {
       if (shippingFileInput.value) shippingFileInput.value.click();
     }
@@ -1295,13 +1369,17 @@ const app = createApp({
       reader.readAsArrayBuffer(file);
     }
 
+    // 执行拆解：匹配 + 校验逻辑
     async function mod1Execute() {
+      // 如果代理已配置，先通过代理获取数据
       if (mod1.proxyUrl) {
         mod1.loading = true;
         let orderOk = true, shippingOk = true;
+        // 如果订单数据尚未通过代理加载，尝试加载
         if (mod1.orderSource !== 'excel' && mod1.orderData.length === 0) {
           orderOk = await fetchOrderFromProxy();
         }
+        // 如果走货数据尚未通过代理加载，尝试加载
         if (mod1.shippingSource !== 'excel' && mod1.shippingData.length === 0) {
           shippingOk = await fetchShippingFromProxy();
         }
@@ -1316,9 +1394,12 @@ const app = createApp({
           return;
         }
       } else {
+        // 无代理时，仅支持本地 Excel
         if (mod1.orderSource !== 'excel' || mod1.shippingSource !== 'excel') {
           alert('未配置飞书代理，请先配置代理地址，或上传本地 Excel 文件。\n\n飞书表数据无法在浏览器中直接读取，请：\n1. 配置飞书代理后重试，或\n2. 将飞书表导出为 Excel 后上传');
           return;
+        }
+      }
 
       // 检查数据是否已解析
       if (mod1.orderData.length === 0 || mod1.shippingData.length === 0) {
@@ -1659,6 +1740,7 @@ const app = createApp({
     }
 
     function mod4Validate() {
+      // Already validated during parse, just advance step
       if (mod4ValidCount.value > 0) mod4.step = 4;
     }
 
@@ -1696,6 +1778,7 @@ const app = createApp({
       const lines = mod5.inputText.split('\n').filter(l => l.trim());
       mod5.validationResults = lines.map(line => {
         const trimmed = line.trim();
+        // Match: SU-{合同号}-{SKU}-{数量}套 [尾数{N}套]
         const regex = /^SU-([A-Za-z0-9]+)-([A-Za-z0-9]+)-(\d+)套(?:[，,\s]*尾数(\d+)套)?$/;
         const match = trimmed.match(regex);
         if (match) {

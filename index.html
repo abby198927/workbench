@@ -1,1824 +1,1688 @@
-
-<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>采购工作台</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ant-design-vue@3.2.20/dist/antd.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ant-design-vue@3.2.20/dist/reset.css">
-  <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/ant-design-vue@3.2.20/dist/antd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f0f2f5; color: #333; }
-    
-    /* Header */
-    .header { height: 56px; background: #001529; display: flex; align-items: center; padding: 0 24px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-    .header-logo { display: flex; align-items: center; gap: 12px; }
-    .header-logo .icon { width: 32px; height: 32px; background: linear-gradient(135deg, #1890ff, #36cfc9); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 16px; }
-    .header-logo .title { color: #fff; font-size: 18px; font-weight: 600; letter-spacing: 1px; }
-    .header-right { margin-left: auto; display: flex; align-items: center; gap: 16px; color: rgba(255,255,255,0.75); font-size: 13px; }
-    .header-badge { background: #1890ff; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
-    
-    /* Layout */
-    .layout { display: flex; margin-top: 56px; min-height: calc(100vh - 56px); }
-    
-    /* Sidebar */
-    .sidebar { width: 240px; background: #fff; border-right: 1px solid #f0f0f0; position: fixed; top: 56px; bottom: 0; left: 0; overflow-y: auto; transition: width 0.3s; z-index: 99; }
-    .sidebar.collapsed { width: 64px; }
-    .sidebar-menu { padding: 8px 0; }
-    .menu-item { display: flex; align-items: center; padding: 12px 24px; cursor: pointer; transition: all 0.2s; color: #595959; font-size: 14px; border-left: 3px solid transparent; gap: 10px; white-space: nowrap; overflow: hidden; }
-    .menu-item:hover { background: #e6f7ff; color: #1890ff; }
-    .menu-item.active { background: #e6f7ff; color: #1890ff; border-left-color: #1890ff; font-weight: 500; }
-    .menu-item .menu-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-    .menu-item .menu-text { transition: opacity 0.2s; }
-    .sidebar.collapsed .menu-text { opacity: 0; width: 0; }
-    .sidebar.collapsed .menu-item { padding: 12px 22px; justify-content: center; }
-    
-    /* Content */
-    .content { margin-left: 240px; flex: 1; padding: 24px; transition: margin-left 0.3s; min-height: calc(100vh - 56px); }
-    .content.expanded { margin-left: 64px; }
-    
-    /* Page header */
-    .page-header { margin-bottom: 24px; }
-    .page-header h2 { font-size: 22px; font-weight: 600; color: #262626; margin-bottom: 4px; }
-    .page-header p { color: #8c8c8c; font-size: 14px; }
-    
-    /* Cards */
-    .card { background: #fff; border-radius: 8px; padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-    .card-title { font-size: 15px; font-weight: 600; color: #262626; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 8px; }
-    .card-title::before { content: ''; width: 3px; height: 16px; background: #1890ff; border-radius: 2px; }
-    
-    /* Button group */
-    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
-    
-    /* Tables */
-    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .data-table th { background: #fafafa; padding: 10px 12px; text-align: left; font-weight: 600; color: #595959; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
-    .data-table td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; color: #262626; }
-    .data-table tr:hover td { background: #fafafa; }
-    
-    /* Form elements */
-    .form-group { margin-bottom: 16px; }
-    .form-label { display: block; font-size: 13px; font-weight: 500; color: #595959; margin-bottom: 6px; }
-    .form-input { width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; transition: border-color 0.2s; outline: none; }
-    .form-input:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
-    .form-select { width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; background: #fff; outline: none; cursor: pointer; }
-    .form-select:focus { border-color: #1890ff; }
-    .form-textarea { width: 100%; padding: 10px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; font-family: 'Monaco', 'Menlo', 'Consolas', monospace; resize: vertical; outline: none; line-height: 1.6; }
-    .form-textarea:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
-    
-    /* Buttons */
-    .btn { padding: 7px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; border: 1px solid #d9d9d9; background: #fff; color: #595959; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn:hover { color: #1890ff; border-color: #1890ff; }
-    .btn-primary { background: #1890ff; color: #fff; border-color: #1890ff; }
-    .btn-primary:hover { background: #40a9ff; border-color: #40a9ff; color: #fff; }
-    .btn-success { background: #52c41a; color: #fff; border-color: #52c41a; }
-    .btn-success:hover { background: #73d13d; border-color: #73d13d; color: #fff; }
-    .btn-warning { background: #faad14; color: #fff; border-color: #faad14; }
-    .btn-warning:hover { background: #ffc53d; border-color: #ffc53d; color: #fff; }
-    .btn-danger { background: #ff4d4f; color: #fff; border-color: #ff4d4f; }
-    .btn-danger:hover { background: #ff7875; border-color: #ff7875; color: #fff; }
-    .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
-    .btn-sm { padding: 4px 10px; font-size: 12px; }
-    
-    /* Upload area */
-    .upload-area { border: 2px dashed #d9d9d9; border-radius: 8px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafafa; }
-    .upload-area:hover { border-color: #1890ff; background: #e6f7ff; }
-    .upload-area .upload-icon { font-size: 40px; color: #1890ff; margin-bottom: 12px; }
-    .upload-area .upload-text { color: #595959; font-size: 14px; }
-    .upload-area .upload-hint { color: #8c8c8c; font-size: 12px; margin-top: 4px; }
-    
-    /* Validation result */
-    .validation-list { max-height: 400px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 6px; }
-    .validation-item { display: flex; align-items: center; padding: 8px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; gap: 8px; }
-    .validation-item:last-child { border-bottom: none; }
-    .validation-item .line-num { color: #8c8c8c; width: 32px; text-align: right; flex-shrink: 0; }
-    .validation-item .line-content { flex: 1; font-family: monospace; }
-    .validation-item .status { flex-shrink: 0; }
-    .validation-item.success .line-content { color: #52c41a; }
-    .validation-item.error .line-content { color: #ff4d4f; }
-    
-    /* Status tags */
-    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
-    .tag-success { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
-    .tag-error { background: #fff2f0; color: #ff4d4f; border: 1px solid #ffccc7; }
-    .tag-info { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
-    .tag-warning { background: #fffbe6; color: #faad14; border: 1px solid #ffe58f; }
-    
-    /* Result panel */
-    .result-panel { background: #f9f9f9; border-radius: 8px; padding: 16px; margin-top: 16px; border: 1px solid #f0f0f0; }
-    .result-panel .result-title { font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 12px; }
-    .result-stats { display: flex; gap: 24px; margin-bottom: 16px; }
-    .result-stat { text-align: center; }
-    .result-stat .stat-num { font-size: 28px; font-weight: 700; color: #1890ff; }
-    .result-stat .stat-label { font-size: 12px; color: #8c8c8c; }
-    
-    /* Steps */
-    .steps { display: flex; gap: 0; margin-bottom: 24px; }
-    .step { flex: 1; text-align: center; padding: 12px 8px; position: relative; }
-    .step::after { content: ''; position: absolute; top: 22px; right: -50%; width: 100%; height: 2px; background: #f0f0f0; z-index: 0; }
-    .step:last-child::after { display: none; }
-    .step .step-icon { width: 28px; height: 28px; border-radius: 50%; background: #f0f0f0; color: #8c8c8c; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; position: relative; z-index: 1; margin-bottom: 6px; }
-    .step.active .step-icon { background: #1890ff; color: #fff; }
-    .step.done .step-icon { background: #52c41a; color: #fff; }
-    .step.done::after { background: #52c41a; }
-    .step .step-text { font-size: 12px; color: #8c8c8c; }
-    .step.active .step-text { color: #1890ff; font-weight: 500; }
-    
-    /* Alert box */
-    .alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 13px; display: flex; align-items: flex-start; gap: 8px; }
-    .alert-info { background: #e6f7ff; border: 1px solid #91d5ff; color: #096dd9; }
-    .alert-success { background: #f6ffed; border: 1px solid #b7eb8f; color: #389e0d; }
-    .alert-warning { background: #fffbe6; border: 1px solid #ffe58f; color: #d48806; }
-    .alert-error { background: #fff2f0; border: 1px solid #ffccc7; color: #cf1322; }
-    
-    /* Grid layout */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    @media (max-width: 1200px) { .grid-2 { grid-template-columns: 1fr; } }
-    
-    /* Table container */
-    .table-container { overflow-x: auto; border: 1px solid #f0f0f0; border-radius: 6px; }
-    
-    /* Loading spinner */
-    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    
-    /* Transition */
-    .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
-    .fade-enter-from, .fade-leave-to { opacity: 0; }
-    
-    /* Config section */
-    .config-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; }
-    .config-row .config-label { color: #8c8c8c; min-width: 70px; }
-    .config-row .config-value { color: #262626; font-family: monospace; background: #fafafa; padding: 2px 8px; border-radius: 4px; }
-    
-    /* Empty state */
-    .empty-state { text-align: center; padding: 48px 0; color: #8c8c8c; }
-    .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
-    .empty-state .empty-text { font-size: 14px; }
-    
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-thumb { background: #d9d9d9; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #bfbfbf; }
-    
-    /* Collapse button */
-    .collapse-btn { position: absolute; top: 50%; right: -12px; transform: translateY(-50%); width: 24px; height: 24px; background: #fff; border: 1px solid #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; font-size: 12px; color: #8c8c8c; box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
-    .collapse-btn:hover { color: #1890ff; border-color: #1890ff; }
-    
-    /* Module transition */
-    .module-content { animation: fadeIn 0.3s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-    
-    /* AI Assistant button in operation area */
-    .btn-ai { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; background: linear-gradient(135deg, #722ed1, #eb2f96); color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 6px rgba(114,46,209,0.3); }
-    .btn-ai:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(114,46,209,0.4); }
-    .btn-ai:active { transform: translateY(0); }
-    
-    /* AI Chat Modal */
-    .ai-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
-    .ai-modal { width: 520px; max-width: 90vw; height: 600px; max-height: 80vh; background: #fff; border-radius: 12px; box-shadow: 0 12px 48px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden; }
-    .ai-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: linear-gradient(135deg, #722ed1, #eb2f96); color: #fff; }
-    .ai-modal-header .ai-title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; }
-    .ai-modal-header .ai-close { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.2); border: none; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
-    .ai-modal-header .ai-close:hover { background: rgba(255,255,255,0.3); }
-    .ai-chat-area { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; background: #fafafa; }
-    .ai-msg { display: flex; gap: 8px; max-width: 85%; }
-    .ai-msg.bot { align-self: flex-start; }
-    .ai-msg.user { align-self: flex-end; flex-direction: row-reverse; }
-    .ai-msg .ai-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-    .ai-msg.bot .ai-avatar { background: linear-gradient(135deg, #722ed1, #eb2f96); }
-    .ai-msg.user .ai-avatar { background: #1890ff; color: #fff; font-size: 12px; }
-    .ai-msg .ai-bubble { padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.6; word-break: break-word; }
-    .ai-msg.bot .ai-bubble { background: #fff; color: #333; border: 1px solid #f0f0f0; border-top-left-radius: 4px; }
-    .ai-msg.user .ai-bubble { background: #1890ff; color: #fff; border-top-right-radius: 4px; }
-    .ai-quick-actions { padding: 8px 20px; border-top: 1px solid #f0f0f0; background: #fff; display: flex; gap: 6px; flex-wrap: wrap; }
-    .ai-quick-btn { padding: 4px 10px; border: 1px solid #d9d9d9; border-radius: 14px; font-size: 12px; color: #595959; background: #fff; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-    .ai-quick-btn:hover { color: #722ed1; border-color: #722ed1; }
-    .ai-input-area { display: flex; gap: 8px; padding: 12px 20px; border-top: 1px solid #f0f0f0; background: #fff; }
-    .ai-input-area input { flex: 1; padding: 10px 14px; border: 1px solid #d9d9d9; border-radius: 8px; font-size: 13px; outline: none; }
-    .ai-input-area input:focus { border-color: #722ed1; box-shadow: 0 0 0 2px rgba(114,46,209,0.1); }
-    .ai-input-area button { padding: 10px 18px; background: linear-gradient(135deg, #722ed1, #eb2f96); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
-    .ai-input-area button:hover { opacity: 0.9; }
-    .ai-input-area button:disabled { opacity: 0.5; cursor: not-allowed; }
-  </style>
-</head>
-<body>
-<div id="app">
-  <!-- Header -->
-  <div class="header">
-    <div class="header-logo">
-      <div class="icon">采</div>
-      <div class="title">采购工作台</div>
-    </div>
-    <div class="header-right">
-      <span class="header-badge">纯前端版</span>
-      <span>数据操作由 AI Agent 执行</span>
-    </div>
-  </div>
-
-  <div class="layout">
-    <!-- Sidebar -->
-    <div class="sidebar" :class="{ collapsed: sidebarCollapsed }">
-      <div class="sidebar-menu">
-        <div v-for="(item, index) in menuItems" :key="index"
-             class="menu-item" :class="{ active: currentModule === index }"
-             @click="currentModule = index">
-          <span class="menu-icon">{{ item.icon }}</span>
-          <span class="menu-text">{{ item.label }}</span>
-        </div>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>采购工作台</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ant-design-vue@3.2.20/dist/antd.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ant-design-vue@3.2.20/dist/reset.css">
+<script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ant-design-vue@3.2.20/dist/antd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f0f2f5; color: #333; }
+.header { height: 56px; background: #001529; display: flex; align-items: center; padding: 0 24px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.header-logo { display: flex; align-items: center; gap: 12px; }
+.header-logo .icon { width: 32px; height: 32px; background: linear-gradient(135deg, #1890ff, #36cfc9); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 16px; }
+.header-logo .title { color: #fff; font-size: 18px; font-weight: 600; letter-spacing: 1px; }
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 16px; color: rgba(255,255,255,0.75); font-size: 13px; }
+.header-badge { background: #1890ff; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+.layout { display: flex; margin-top: 56px; min-height: calc(100vh - 56px); }
+.sidebar { width: 240px; background: #fff; border-right: 1px solid #f0f0f0; position: fixed; top: 56px; bottom: 0; left: 0; overflow-y: auto; transition: width 0.3s; z-index: 99; }
+.sidebar.collapsed { width: 64px; }
+.sidebar-menu { padding: 8px 0; }
+.menu-item { display: flex; align-items: center; padding: 12px 24px; cursor: pointer; transition: all 0.2s; color: #595959; font-size: 14px; border-left: 3px solid transparent; gap: 10px; white-space: nowrap; overflow: hidden; }
+.menu-item:hover { background: #e6f7ff; color: #1890ff; }
+.menu-item.active { background: #e6f7ff; color: #1890ff; border-left-color: #1890ff; font-weight: 500; }
+.menu-item .menu-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.menu-item .menu-text { transition: opacity 0.2s; }
+.sidebar.collapsed .menu-text { opacity: 0; width: 0; }
+.sidebar.collapsed .menu-item { padding: 12px 22px; justify-content: center; }
+.content { margin-left: 240px; flex: 1; padding: 24px; transition: margin-left 0.3s; min-height: calc(100vh - 56px); }
+.content.expanded { margin-left: 64px; }
+.page-header { margin-bottom: 24px; }
+.page-header h2 { font-size: 22px; font-weight: 600; color: #262626; margin-bottom: 4px; }
+.page-header p { color: #8c8c8c; font-size: 14px; }
+.card { background: #fff; border-radius: 8px; padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.card-title { font-size: 15px; font-weight: 600; color: #262626; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 8px; }
+.card-title::before { content: ''; width: 3px; height: 16px; background: #1890ff; border-radius: 2px; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { background: #fafafa; padding: 10px 12px; text-align: left; font-weight: 600; color: #595959; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+.data-table td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; color: #262626; }
+.data-table tr:hover td { background: #fafafa; }
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 500; color: #595959; margin-bottom: 6px; }
+.form-input { width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; transition: border-color 0.2s; outline: none; }
+.form-input:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
+.form-select { width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; background: #fff; outline: none; cursor: pointer; }
+.form-select:focus { border-color: #1890ff; }
+.form-textarea { width: 100%; padding: 10px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; font-family: 'Monaco', 'Menlo', 'Consolas', monospace; resize: vertical; outline: none; line-height: 1.6; }
+.form-textarea:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
+.btn { padding: 7px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; border: 1px solid #d9d9d9; background: #fff; color: #595959; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { color: #1890ff; border-color: #1890ff; }
+.btn-primary { background: #1890ff; color: #fff; border-color: #1890ff; }
+.btn-primary:hover { background: #40a9ff; border-color: #40a9ff; color: #fff; }
+.btn-success { background: #52c41a; color: #fff; border-color: #52c41a; }
+.btn-success:hover { background: #73d13d; border-color: #73d13d; color: #fff; }
+.btn-warning { background: #faad14; color: #fff; border-color: #faad14; }
+.btn-warning:hover { background: #ffc53d; border-color: #ffc53d; color: #fff; }
+.btn-danger { background: #ff4d4f; color: #fff; border-color: #ff4d4f; }
+.btn-danger:hover { background: #ff7875; border-color: #ff7875; color: #fff; }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.upload-area { border: 2px dashed #d9d9d9; border-radius: 8px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafafa; }
+.upload-area:hover { border-color: #1890ff; background: #e6f7ff; }
+.upload-area .upload-icon { font-size: 40px; color: #1890ff; margin-bottom: 12px; }
+.upload-area .upload-text { color: #595959; font-size: 14px; }
+.upload-area .upload-hint { color: #8c8c8c; font-size: 12px; margin-top: 4px; }
+.validation-list { max-height: 400px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 6px; }
+.validation-item { display: flex; align-items: center; padding: 8px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; gap: 8px; }
+.validation-item:last-child { border-bottom: none; }
+.validation-item .line-num { color: #8c8c8c; width: 32px; text-align: right; flex-shrink: 0; }
+.validation-item .line-content { flex: 1; font-family: monospace; }
+.validation-item .status { flex-shrink: 0; }
+.validation-item.success .line-content { color: #52c41a; }
+.validation-item.error .line-content { color: #ff4d4f; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+.tag-success { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+.tag-error { background: #fff2f0; color: #ff4d4f; border: 1px solid #ffccc7; }
+.tag-info { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
+.tag-warning { background: #fffbe6; color: #faad14; border: 1px solid #ffe58f; }
+.result-panel { background: #f9f9f9; border-radius: 8px; padding: 16px; margin-top: 16px; border: 1px solid #f0f0f0; }
+.result-panel .result-title { font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 12px; }
+.result-stats { display: flex; gap: 24px; margin-bottom: 16px; }
+.result-stat { text-align: center; }
+.result-stat .stat-num { font-size: 28px; font-weight: 700; color: #1890ff; }
+.result-stat .stat-label { font-size: 12px; color: #8c8c8c; }
+.steps { display: flex; gap: 0; margin-bottom: 24px; }
+.step { flex: 1; text-align: center; padding: 12px 8px; position: relative; }
+.step::after { content: ''; position: absolute; top: 22px; right: -50%; width: 100%; height: 2px; background: #f0f0f0; z-index: 0; }
+.step:last-child::after { display: none; }
+.step .step-icon { width: 28px; height: 28px; border-radius: 50%; background: #f0f0f0; color: #8c8c8c; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; position: relative; z-index: 1; margin-bottom: 6px; }
+.step.active .step-icon { background: #1890ff; color: #fff; }
+.step.done .step-icon { background: #52c41a; color: #fff; }
+.step.done::after { background: #52c41a; }
+.step .step-text { font-size: 12px; color: #8c8c8c; }
+.step.active .step-text { color: #1890ff; font-weight: 500; }
+.alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 13px; display: flex; align-items: flex-start; gap: 8px; }
+.alert-info { background: #e6f7ff; border: 1px solid #91d5ff; color: #096dd9; }
+.alert-success { background: #f6ffed; border: 1px solid #b7eb8f; color: #389e0d; }
+.alert-warning { background: #fffbe6; border: 1px solid #ffe58f; color: #d48806; }
+.alert-error { background: #fff2f0; border: 1px solid #ffccc7; color: #cf1322; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 1200px) { .grid-2 { grid-template-columns: 1fr; } }
+.table-container { overflow-x: auto; border: 1px solid #f0f0f0; border-radius: 6px; }
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+.config-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; }
+.config-row .config-label { color: #8c8c8c; min-width: 70px; }
+.config-row .config-value { color: #262626; font-family: monospace; background: #fafafa; padding: 2px 8px; border-radius: 4px; }
+.empty-state { text-align: center; padding: 48px 0; color: #8c8c8c; }
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+.empty-state .empty-text { font-size: 14px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #d9d9d9; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #bfbfbf; }
+.collapse-btn { position: absolute; top: 50%; right: -12px; transform: translateY(-50%); width: 24px; height: 24px; background: #fff; border: 1px solid #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; font-size: 12px; color: #8c8c8c; box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
+.collapse-btn:hover { color: #1890ff; border-color: #1890ff; }
+.module-content { animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.btn-ai { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; background: linear-gradient(135deg, #722ed1, #eb2f96); color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 6px rgba(114,46,209,0.3); }
+.btn-ai:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(114,46,209,0.4); }
+.btn-ai:active { transform: translateY(0); }
+.ai-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
+.ai-modal { width: 520px; max-width: 90vw; height: 600px; max-height: 80vh; background: #fff; border-radius: 12px; box-shadow: 0 12px 48px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden; }
+.ai-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: linear-gradient(135deg, #722ed1, #eb2f96); color: #fff; }
+.ai-modal-header .ai-title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; }
+.ai-modal-header .ai-close { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.2); border: none; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+.ai-modal-header .ai-close:hover { background: rgba(255,255,255,0.3); }
+.ai-chat-area { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; background: #fafafa; }
+.ai-msg { display: flex; gap: 8px; max-width: 85%; }
+.ai-msg.bot { align-self: flex-start; }
+.ai-msg.user { align-self: flex-end; flex-direction: row-reverse; }
+.ai-msg .ai-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.ai-msg.bot .ai-avatar { background: linear-gradient(135deg, #722ed1, #eb2f96); }
+.ai-msg.user .ai-avatar { background: #1890ff; color: #fff; font-size: 12px; }
+.ai-msg .ai-bubble { padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.6; word-break: break-word; }
+.ai-msg.bot .ai-bubble { background: #fff; color: #333; border: 1px solid #f0f0f0; border-top-left-radius: 4px; }
+.ai-msg.user .ai-bubble { background: #1890ff; color: #fff; border-top-right-radius: 4px; }
+.ai-quick-actions { padding: 8px 20px; border-top: 1px solid #f0f0f0; background: #fff; display: flex; gap: 6px; flex-wrap: wrap; }
+.ai-quick-btn { padding: 4px 10px; border: 1px solid #d9d9d9; border-radius: 14px; font-size: 12px; color: #595959; background: #fff; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.ai-quick-btn:hover { color: #722ed1; border-color: #722ed1; }
+.ai-input-area { display: flex; gap: 8px; padding: 12px 20px; border-top: 1px solid #f0f0f0; background: #fff; }
+.ai-input-area input { flex: 1; padding: 10px 14px; border: 1px solid #d9d9d9; border-radius: 8px; font-size: 13px; outline: none; }
+.ai-input-area input:focus { border-color: #722ed1; box-shadow: 0 0 0 2px rgba(114,46,209,0.1); }
+.ai-input-area button { padding: 10px 18px; background: linear-gradient(135deg, #722ed1, #eb2f96); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
+.ai-input-area button:hover { opacity: 0.9; }
+.ai-input-area button:disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+</head><body>
+  <div id="app">
+    <!-- 顶部导航 -->
+    <div class="header">
+      <div class="header-logo">
+        <div class="icon">采</div>
+        <div class="title">采购工作台</div>
       </div>
-      <div class="collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed">
-        {{ sidebarCollapsed ? '▶' : '◀' }}
+      <div class="header-right">
+        <span class="header-badge">v2.0</span>
+        <span>采购数据管理平台</span>
       </div>
     </div>
 
-    <!-- Content -->
-    <div class="content" :class="{ expanded: sidebarCollapsed }">
-      
-      <!-- Module 1: 走货匹配拆解 -->
-      <div v-if="currentModule === 0" class="module-content">
-        <div class="page-header">
-          <h2>走货匹配拆解</h2>
-          <p>将走货数据与订单数据进行匹配，执行拆解操作并校验守恒</p>
-        </div>
-
-        <!-- Steps -->
-        <div class="steps">
-          <div class="step" :class="{ active: mod1.step === 1, done: mod1.step > 1 }">
-            <div class="step-icon">{{ mod1.step > 1 ? '✓' : '1' }}</div>
-            <div class="step-text">配置数据源</div>
-          </div>
-          <div class="step" :class="{ active: mod1.step === 2, done: mod1.step >= 2 }">
-            <div class="step-icon">{{ mod1.step >= 2 ? '✓' : '2' }}</div>
-            <div class="step-text">执行拆解</div>
+    <!-- 主体布局 -->
+    <div class="layout">
+      <!-- 左侧菜单 -->
+      <div class="sidebar" :class="{ collapsed: sidebarCollapsed }">
+        <div class="sidebar-menu">
+          <div v-for="(item, idx) in menuItems" :key="idx"
+               class="menu-item" :class="{ active: currentModule === item.key }"
+               @click="switchModule(item.key)">
+            <div class="menu-icon">{{ item.icon }}</div>
+            <div class="menu-text">{{ item.name }}</div>
           </div>
         </div>
-
-        <!-- Data source config: 两个独立数据源，支持选sheet -->
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-title">📋 订单明细表数据源</div>
-            <div class="form-group">
-              <label class="form-label">选择预设飞书表</label>
-              <select class="form-select" v-model="mod1.orderTable" @change="onOrderTableChange">
-                <option value="">-- 请选择 --</option>
-                <option v-for="t in presetTables" :key="t.token" :value="t.token">{{ t.name }}</option>
-              </select>
-            </div>
-            <div class="form-group" v-if="mod1.orderTable && mod1OrderSheetOptions.length > 0">
-              <label class="form-label">选择Sheet</label>
-              <select class="form-select" v-model="mod1.orderSheetId">
-                <option value="">-- 请选择Sheet --</option>
-                <option v-for="s in mod1OrderSheetOptions" :key="s.id" :value="s.id">{{ s.name }}（{{ s.id }}）</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">或输入飞书表链接</label>
-              <input class="form-input" v-model="mod1.orderUrl" placeholder="粘贴飞书表链接" @input="onOrderUrlChange">
-            </div>
-            <div class="form-group" v-if="mod1.orderUrl">
-              <label class="form-label">Sheet ID（可选）</label>
-              <input class="form-input" v-model="mod1.orderSheetId" placeholder="填写Sheet ID，如 20698c">
-              <div style="font-size:11px;color:#8c8c8c;margin-top:4px">💡 URL中如含 sheet=xxx 会自动提取</div>
-            </div>
-            <div style="text-align:center;color:#8c8c8c;font-size:12px;margin:8px 0">── 或上传本地Excel ──</div>
-            <div class="upload-area" style="padding:20px" @click="triggerOrderUpload" @dragover.prevent @drop.prevent="handleOrderDrop">
-              <div style="font-size:28px;color:#1890ff;margin-bottom:8px">📁</div>
-              <div class="upload-text" style="font-size:13px" v-if="!mod1.orderFile">点击或拖拽Excel文件</div>
-              <div class="upload-text" style="font-size:13px;color:#52c41a" v-else>✅ {{ mod1.orderFileName }} ({{ mod1.orderData.length }}条)</div>
-              <div class="upload-hint">支持 .xlsx, .xls</div>
-              <input type="file" ref="orderFileInput" accept=".xlsx,.xls" style="display:none" @change="handleOrderSelect">
-            </div>
-            <div v-if="mod1.orderSource" class="alert alert-success" style="margin-top:12px;font-size:12px">
-              ✓ 已配置：{{ mod1.orderSourceDesc }}
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-title">📦 走货明细表数据源</div>
-            <div class="form-group">
-              <label class="form-label">选择预设飞书表</label>
-              <select class="form-select" v-model="mod1.shippingTable" @change="onShippingTableChange">
-                <option value="">-- 请选择 --</option>
-                <option v-for="t in presetTables" :key="t.token" :value="t.token">{{ t.name }}</option>
-              </select>
-            </div>
-            <div class="form-group" v-if="mod1.shippingTable && mod1ShippingSheetOptions.length > 0">
-              <label class="form-label">选择Sheet</label>
-              <select class="form-select" v-model="mod1.shippingSheetId">
-                <option value="">-- 请选择Sheet --</option>
-                <option v-for="s in mod1ShippingSheetOptions" :key="s.id" :value="s.id">{{ s.name }}（{{ s.id }}）</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">或输入飞书表链接</label>
-              <input class="form-input" v-model="mod1.shippingUrl" placeholder="粘贴飞书表链接" @input="onShippingUrlChange">
-            </div>
-            <div class="form-group" v-if="mod1.shippingUrl">
-              <label class="form-label">Sheet ID（可选）</label>
-              <input class="form-input" v-model="mod1.shippingSheetId" placeholder="填写Sheet ID，如 htYQQ5">
-              <div style="font-size:11px;color:#8c8c8c;margin-top:4px">💡 URL中如含 sheet=xxx 会自动提取</div>
-            </div>
-            <div style="text-align:center;color:#8c8c8c;font-size:12px;margin:8px 0">── 或上传本地Excel ──</div>
-            <div class="upload-area" style="padding:20px" @click="triggerShippingUpload" @dragover.prevent @drop.prevent="handleShippingDrop">
-              <div style="font-size:28px;color:#1890ff;margin-bottom:8px">📁</div>
-              <div class="upload-text" style="font-size:13px" v-if="!mod1.shippingFile">点击或拖拽Excel文件</div>
-              <div class="upload-text" style="font-size:13px;color:#52c41a" v-else>✅ {{ mod1.shippingFileName }} ({{ mod1.shippingData.length }}条)</div>
-              <div class="upload-hint">支持 .xlsx, .xls</div>
-              <input type="file" ref="shippingFileInput" accept=".xlsx,.xls" style="display:none" @change="handleShippingSelect">
-            </div>
-            <div v-if="mod1.shippingSource" class="alert alert-success" style="margin-top:12px;font-size:12px">
-              ✓ 已配置：{{ mod1.shippingSourceDesc }}
-            </div>
-          </div>
+        <div class="collapse-btn" @click.stop="sidebarCollapsed = !sidebarCollapsed">
+          {{ sidebarCollapsed ? '▶' : '◀' }}
         </div>
+      </div>
 
-        <!-- Action buttons -->
-        <div class="card">
-          <div class="card-title">操作区</div>
-          <div class="alert" :class="mod1Ready ? 'alert-success' : 'alert-warning'" style="margin-bottom:12px">
-            <template v-if="mod1Ready">✅ 两个数据源均已就绪，可以执行拆解</template>
-            <template v-else>⚠️ 请先为两个数据源分别选择数据来源（飞书表/链接/Excel）</template>
-          </div>
-          <div class="btn-group">
-            <button class="btn btn-primary" @click="mod1Execute" :disabled="!mod1Ready || mod1.step === 2">
-              <span v-if="mod1.loading" class="spinner"></span>
-              🔍 执行拆解试运行
-            </button>
-            <button class="btn" @click="mod1Reset">🔄 重置</button>
-            <button class="btn-ai" @click="openAI('mod1')">🤖 AI助手执行操作</button>
-          </div>
-        </div>
+      <!-- 右侧内容区 -->
+      <div class="content" :class="{ expanded: sidebarCollapsed }">
 
-        <!-- Results -->
-        <div v-if="mod1.result" class="card">
-          <div class="card-title">拆解结果</div>
-
-          <!-- 汇总统计 -->
-          <div class="result-stats">
-            <div class="result-stat"><div class="stat-num">{{ mod1.result.totalCount }}</div><div class="stat-label">总数据量</div></div>
-            <div class="result-stat"><div class="stat-num" style="color:#52c41a">{{ mod1.result.successCount }}</div><div class="stat-label">正确</div></div>
-            <div class="result-stat"><div class="stat-num" :style="{ color: mod1.result.errorCount > 0 ? '#ff4d4f' : '#d9d9d9' }">{{ mod1.result.errorCount }}</div><div class="stat-label">错误</div></div>
-            <div class="result-stat"><div class="stat-num" :style="{ color: mod1.result.verified ? '#52c41a' : '#ff4d4f' }">{{ mod1.result.verified ? '✓' : '✗' }}</div><div class="stat-label">守恒校验</div></div>
+        <!-- ==================== 模块1: 订单追踪 ==================== -->
+        <div v-if="currentModule === 'mod1'" class="module-content">
+          <div class="page-header">
+            <h2>📦 订单追踪</h2>
+            <p>导入订单走货计划表，按日期范围筛选和追踪订单数据</p>
           </div>
 
-          <!-- 全部正确的提示 -->
-          <div v-if="mod1.result.errorCount === 0" class="alert alert-success" style="margin-top:16px">
-            ✅ 全部 {{ mod1.result.successCount }} 条数据拆解正确，守恒校验通过！数据完整性验证成功。
-          </div>
-
-          <!-- 有错误时的提示 -->
-          <div v-else class="alert alert-error" style="margin-top:16px">
-            ⚠️ 共 {{ mod1.result.totalCount }} 条数据：{{ mod1.result.successCount }} 条正确，{{ mod1.result.errorCount }} 条存在错误，请检查下方错误明细。
-          </div>
-
-          <!-- 正确数据明细 -->
-          <div v-if="mod1.result.items.length > 0" style="margin-top:16px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <div style="font-size:13px;font-weight:600;color:#52c41a">✅ 正确数据（{{ mod1.result.items.length }} 条）</div>
-              <button class="btn btn-success" @click="mod1Export" style="font-size:12px;padding:4px 12px">📥 导出拆解结果</button>
+          <!-- 步骤条 -->
+          <div class="steps">
+            <div class="step" :class="{ active: mod1.step === 1, done: mod1.step > 1 }">
+              <div class="step-icon">{{ mod1.step > 1 ? '✓' : '1' }}</div>
+              <div class="step-text">导入订单表</div>
             </div>
-            <div class="table-container" style="max-height:300px;overflow-y:auto">
-              <table class="data-table">
-                <thead><tr><th>合同号</th><th>货柜号</th><th>SKU</th><th>走货数量</th><th>订单数量</th></tr></thead>
-                <tbody>
-                  <tr v-for="(row, i) in mod1.result.items" :key="i">
-                    <td>{{ row.contract }}</td><td>{{ row.container }}</td><td>{{ row.sku }}</td>
-                    <td>{{ row.shippingQty }}</td><td>{{ row.orderQty }}</td>
-                  </tr>
-                </tbody>
-              </table>
+            <div class="step" :class="{ active: mod1.step === 2, done: mod1.step > 2 }">
+              <div class="step-icon">{{ mod1.step > 2 ? '✓' : '2' }}</div>
+              <div class="step-text">配置字段映射</div>
+            </div>
+            <div class="step" :class="{ active: mod1.step === 3 }">
+              <div class="step-icon">3</div>
+              <div class="step-text">查询结果</div>
             </div>
           </div>
 
-          <!-- 错误明细 -->
-          <div v-if="mod1.result.errors.length > 0" style="margin-top:16px">
-            <div style="font-size:13px;font-weight:600;color:#ff4d4f;margin-bottom:8px">❌ 错误明细（{{ mod1.result.errors.length }} 条）</div>
-            <div class="table-container" style="max-height:400px;overflow-y:auto">
-              <table class="data-table">
-                <thead><tr><th style="width:40px">#</th><th style="width:160px">货柜 / SKU</th><th style="width:100px">错误类型</th><th>错误详情</th></tr></thead>
-                <tbody>
-                  <tr v-for="(err, i) in mod1.result.errors" :key="i" style="background:#fff2f0">
-                    <td style="color:#999">{{ i + 1 }}</td>
-                    <td><strong>{{ err.field }}</strong></td>
-                    <td><span class="tag tag-error">{{ err.type }}</span></td>
-                    <td style="color:#ff4d4f">{{ err.message }}</td>
-                  </tr>
-                </tbody>
-              </table>
+          <!-- 步骤1: 导入 -->
+          <div v-if="mod1.step === 1" class="card">
+            <div class="card-title">导入订单走货计划表</div>
+            <div class="alert alert-info">📋 支持 .xlsx / .xls 格式，可导入多个Sheet的数据</div>
+            <div class="upload-area" @click="triggerFileInput('mod1')" :style="{ pointerEvents: mod1.loading ? 'none' : 'auto' }">
+              <div class="upload-icon">📁</div>
+              <div class="upload-text">点击选择 Excel 文件</div>
+              <div class="upload-hint">支持 .xlsx / .xls</div>
+            </div>
+            <input type="file" ref="mod1FileInput" accept=".xlsx,.xls" style="display:none" @change="handleFileSelect($event, 'mod1')">
+            <div v-if="mod1.loading" class="alert alert-info" style="margin-top:16px">
+              <span class="spinner"></span> 正在解析文件...
             </div>
           </div>
 
-          <!-- 确认执行按钮组 -->
-          <div v-if="!mod1.confirmed" style="margin-top:20px;padding-top:16px;border-top:2px solid #f0f0f0">
-            <div style="font-size:14px;font-weight:600;margin-bottom:12px;color:#333">📋 确认操作</div>
+          <!-- 步骤2: 字段映射 -->
+          <div v-if="mod1.step === 2" class="card">
+            <div class="card-title">配置字段映射</div>
+            <div class="alert alert-info">🔧 请将表头字段映射到系统标准字段。未使用的字段选择"忽略"</div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label class="form-label">选择数据表（Sheet）</label>
+              <select class="form-select" v-model="mod1.selectedSheet" @change="onSheetChange('mod1')" style="width:260px">
+                <option v-for="s in mod1.sheets" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="grid-2">
+              <div v-for="(f, idx) in standardFields" :key="f.key" class="form-group">
+                <label class="form-label">{{ f.label }} <span style="color:#8c8c8c">（{{ f.key }}）</span></label>
+                <select class="form-select" v-model="mod1.fieldMap[f.key]">
+                  <option value="">-- 忽略 --</option>
+                  <option v-for="h in mod1.headers" :key="h" :value="h">{{ h }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="btn-group" style="margin-top:16px">
+              <button class="btn" @click="mod1.step = 1">← 重新导入</button>
+              <button class="btn btn-primary" @click="mod1.step = 3; executeMod1Query()">确认映射并查询 →</button>
+            </div>
+          </div>
+
+          <!-- 步骤3: 结果 -->
+          <div v-if="mod1.step === 3" class="card">
+            <div class="card-title">查询结果</div>
+            <div class="grid-2" style="margin-bottom:16px">
+              <div class="form-group">
+                <label class="form-label">起始日期</label>
+                <input type="date" class="form-input" v-model="mod1.startDate">
+              </div>
+              <div class="form-group">
+                <label class="form-label">结束日期</label>
+                <input type="date" class="form-input" v-model="mod1.endDate">
+              </div>
+            </div>
             <div class="btn-group">
-              <button class="btn btn-warning" @click="mod1ConfirmLark" :disabled="mod1.result.errorCount > 0" style="font-size:13px">
-                ✅ 确定执行（写入飞书表）
-              </button>
-              <button class="btn btn-success" @click="mod1ConfirmExport" style="font-size:13px">
-                📥 导出最终订单明细表
-              </button>
+              <button class="btn btn-primary" @click="executeMod1Query()">🔍 筛选</button>
+              <button class="btn" @click="mod1.step = 2">🔧 修改映射</button>
+              <button class="btn" @click="mod1.step = 1; resetMod1()">📂 重新导入</button>
+              <button class="btn btn-ai" @click="openAI('mod1')">🤖 AI助手执行操作</button>
             </div>
-            <div v-if="mod1.result.errorCount > 0" style="font-size:12px;color:#ff4d4f;margin-top:8px">
-              ⚠️ 存在 {{ mod1.result.errorCount }} 条错误数据，请先修正后再执行写入飞书
+            <div class="result-panel" v-if="mod1.results.length > 0">
+              <div class="result-title">筛选结果</div>
+              <div class="result-stats">
+                <div class="result-stat">
+                  <div class="stat-num">{{ mod1.results.length }}</div>
+                  <div class="stat-label">匹配记录数</div>
+                </div>
+              </div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>序号</th>
+                      <th v-for="f in mod1.displayFields" :key="f.key">{{ f.label }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(row, idx) in mod1.results" :key="idx">
+                      <td>{{ idx + 1 }}</td>
+                      <td v-for="f in mod1.displayFields" :key="f.key">{{ formatCell(row, f) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div v-else-if="mod1.step === 3 && !mod1.loading" class="empty-state">
+              <div class="empty-icon">📭</div>
+              <div class="empty-text">暂无符合条件的记录</div>
+            </div>
+          </div>
+        </div>        <!-- ==================== 模块2: 订单走货核对 ==================== -->
+        <div v-if="currentModule === 'mod2'" class="module-content">
+          <div class="page-header">
+            <h2>📋 订单走货核对</h2>
+            <p>导入走货记录表，按日期范围筛选并校验是否匹配订单</p>
+          </div>
+
+          <div class="steps">
+            <div class="step" :class="{ active: mod2.step === 1, done: mod2.step > 1 }">
+              <div class="step-icon">{{ mod2.step > 1 ? '✓' : '1' }}</div>
+              <div class="step-text">导入走货表</div>
+            </div>
+            <div class="step" :class="{ active: mod2.step === 2, done: mod2.step > 2 }">
+              <div class="step-icon">{{ mod2.step > 2 ? '✓' : '2' }}</div>
+              <div class="step-text">配置字段映射</div>
+            </div>
+            <div class="step" :class="{ active: mod2.step === 3 }">
+              <div class="step-icon">3</div>
+              <div class="step-text">核对结果</div>
             </div>
           </div>
 
-          <!-- 已确认执行后的提示 -->
-          <div v-if="mod1.confirmed" style="margin-top:20px;padding-top:16px;border-top:2px solid #f0f0f0">
-            <div v-if="mod1.confirmedAction === 'lark'" class="alert alert-success">
-              <template v-if="mod1.confirmedText.startsWith('✅ 已成功写入')">
-                {{ mod1.confirmedText }}
-              </template>
-              <template v-else>
-                ✅ 拆解指令已复制到剪贴板！请将以下内容发送给我，我将执行飞书表写入操作：<br>
-              </template>
-              <textarea readonly style="width:100%;height:120px;margin-top:8px;font-size:12px;border:1px solid #d9d9d9;border-radius:4px;padding:8px;resize:vertical" @click="$event.target.select()">{{ mod1.confirmedText }}</textarea>
+          <!-- 步骤1 -->
+          <div v-if="mod2.step === 1" class="card">
+            <div class="card-title">导入走货记录表</div>
+            <div class="alert alert-info">📋 支持 .xlsx / .xls 格式</div>
+            <div class="upload-area" @click="triggerFileInput('mod2')" :style="{ pointerEvents: mod2.loading ? 'none' : 'auto' }">
+              <div class="upload-icon">📁</div>
+              <div class="upload-text">点击选择走货记录 Excel 文件</div>
+              <div class="upload-hint">支持 .xlsx / .xls</div>
             </div>
-            <div v-if="mod1.confirmedAction === 'export'" class="alert alert-success">
-              ✅ 订单明细表已导出！请检查下载的文件。
+            <input type="file" ref="mod2FileInput" accept=".xlsx,.xls" style="display:none" @change="handleFileSelect($event, 'mod2')">
+            <div v-if="mod2.loading" class="alert alert-info" style="margin-top:16px">
+              <span class="spinner"></span> 正在解析文件...
+            </div>
+          </div>
+
+          <!-- 步骤2 -->
+          <div v-if="mod2.step === 2" class="card">
+            <div class="card-title">配置字段映射</div>
+            <div class="alert alert-info">🔧 配置走货表字段映射，并选择用于匹配订单的关联字段</div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label class="form-label">选择数据表（Sheet）</label>
+              <select class="form-select" v-model="mod2.selectedSheet" @change="onSheetChange('mod2')" style="width:260px">
+                <option v-for="s in mod2.sheets" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="alert alert-warning">⚠️ 关联字段用于将走货记录与模块1的订单表进行匹配，请确保两个表中该字段内容一致</div>
+            <div class="grid-2">
+              <div v-for="(f, idx) in mod2StandardFields" :key="f.key" class="form-group">
+                <label class="form-label">{{ f.label }}（{{ f.key }}）
+                  <span v-if="f.isLink" style="color:#faad14;font-size:11px"> 🔗 关联字段</span>
+                </label>
+                <select class="form-select" v-model="mod2.fieldMap[f.key]">
+                  <option value="">-- 忽略 --</option>
+                  <option v-for="h in mod2.headers" :key="h" :value="h">{{ h }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="btn-group" style="margin-top:16px">
+              <button class="btn" @click="mod2.step = 1">← 重新导入</button>
+              <button class="btn btn-primary" @click="mod2.step = 3; executeMod2Check()">确认映射并核对 →</button>
+            </div>
+          </div>
+
+          <!-- 步骤3 -->
+          <div v-if="mod2.step === 3" class="card">
+            <div class="card-title">核对结果</div>
+            <div class="grid-2" style="margin-bottom:16px">
+              <div class="form-group">
+                <label class="form-label">起始日期</label>
+                <input type="date" class="form-input" v-model="mod2.startDate">
+              </div>
+              <div class="form-group">
+                <label class="form-label">结束日期</label>
+                <input type="date" class="form-input" v-model="mod2.endDate">
+              </div>
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-primary" @click="executeMod2Check()">🔍 重新核对</button>
+              <button class="btn" @click="mod2.step = 2">🔧 修改映射</button>
+              <button class="btn" @click="mod2.step = 1; resetMod2()">📂 重新导入</button>
+              <button class="btn btn-ai" @click="openAI('mod2')">🤖 AI助手执行操作</button>
+            </div>
+            <div class="result-panel" v-if="mod2.hasResult">
+              <div class="result-title">核对统计</div>
+              <div class="result-stats">
+                <div class="result-stat">
+                  <div class="stat-num">{{ mod2.filtered.length }}</div>
+                  <div class="stat-label">走货记录</div>
+                </div>
+                <div class="result-stat">
+                  <div class="stat-num" style="color:#52c41a">{{ mod2.matched }}</div>
+                  <div class="stat-label">匹配成功</div>
+                </div>
+                <div class="result-stat">
+                  <div class="stat-num" style="color:#ff4d4f">{{ mod2.unmatched }}</div>
+                  <div class="stat-label">未匹配</div>
+                </div>
+              </div>
+              <div v-if="mod2.unmatched > 0" class="alert alert-error" style="margin-bottom:12px">⚠️ 有 {{ mod2.unmatched }} 条走货记录未找到对应订单，请检查</div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>序号</th>
+                      <th v-for="f in mod2.displayFields" :key="f.key">{{ f.label }}</th>
+                      <th>核对状态</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(row, idx) in mod2.filtered" :key="idx">
+                      <td>{{ idx + 1 }}</td>
+                      <td v-for="f in mod2.displayFields" :key="f.key">{{ formatCell(row, f) }}</td>
+                      <td>
+                        <span :class="row._matched ? 'tag tag-success' : 'tag tag-error'">
+                          {{ row._matched ? '✓ 已匹配' : '✗ 未匹配' }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div v-else-if="mod2.step === 3 && !mod2.hasResult" class="empty-state">
+              <div class="empty-icon">📭</div>
+              <div class="empty-text">请先执行核对</div>
+            </div>
+          </div>
+        </div>        <!-- ==================== 模块3: 订单走货登记 ==================== -->
+        <div v-if="currentModule === 'mod3'" class="module-content">
+          <div class="page-header">
+            <h2>📝 订单走货登记</h2>
+            <p>导入走货记录与订单表，AI分析并自动匹配登记走货数据</p>
+          </div>
+
+          <div class="steps">
+            <div class="step" :class="{ active: mod3.step === 1, done: mod3.step > 1 }">
+              <div class="step-icon">{{ mod3.step > 1 ? '✓' : '1' }}</div>
+              <div class="step-text">导入走货记录</div>
+            </div>
+            <div class="step" :class="{ active: mod3.step === 2, done: mod3.step > 2 }">
+              <div class="step-icon">{{ mod3.step > 2 ? '✓' : '2' }}</div>
+              <div class="step-text">配置走货字段</div>
+            </div>
+            <div class="step" :class="{ active: mod3.step === 3, done: mod3.step > 3 }">
+              <div class="step-icon">{{ mod3.step > 3 ? '✓' : '3' }}</div>
+              <div class="step-text">导入订单表</div>
+            </div>
+            <div class="step" :class="{ active: mod3.step === 4 }">
+              <div class="step-icon">4</div>
+              <div class="step-text">登记结果</div>
+            </div>
+          </div>
+
+          <!-- 步骤1 -->
+          <div v-if="mod3.step === 1" class="card">
+            <div class="card-title">导入走货记录表</div>
+            <div class="alert alert-info">📋 先导入本次走货记录数据</div>
+            <div class="upload-area" @click="triggerFileInput('mod3a')" :style="{ pointerEvents: mod3.loadingA ? 'none' : 'auto' }">
+              <div class="upload-icon">📁</div>
+              <div class="upload-text">点击选择走货记录 Excel 文件</div>
+              <div class="upload-hint">支持 .xlsx / .xls</div>
+            </div>
+            <input type="file" ref="mod3aFileInput" accept=".xlsx,.xls" style="display:none" @change="handleFileSelect($event, 'mod3a')">
+            <div v-if="mod3.loadingA" class="alert alert-info" style="margin-top:16px">
+              <span class="spinner"></span> 正在解析文件...
+            </div>
+            <div v-if="mod3.sheetAData.length > 0" class="result-panel" style="margin-top:16px">
+              <div class="result-title">✅ 走货记录已导入</div>
+              <div style="color:#52c41a;font-size:14px;margin-bottom:8px">共 {{ mod3.sheetAData.length }} 条记录，{{ mod3.headersA.length }} 个字段</div>
+              <button class="btn btn-primary" @click="mod3.step = 2">下一步：配置字段映射 →</button>
+            </div>
+          </div>
+
+          <!-- 步骤2 -->
+          <div v-if="mod3.step === 2" class="card">
+            <div class="card-title">配置走货记录字段映射</div>
+            <div class="alert alert-info">🔧 选择走货记录表中的表头字段对应关系</div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label class="form-label">选择数据表（Sheet）</label>
+              <select class="form-select" v-model="mod3.selectedSheetA" @change="onSheetChange('mod3a')" style="width:260px">
+                <option v-for="s in mod3.sheetsA" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="grid-2">
+              <div v-for="f in mod3StandardFields" :key="f.key" class="form-group">
+                <label class="form-label">{{ f.label }}（{{ f.key }}）</label>
+                <select class="form-select" v-model="mod3.fieldMapA[f.key]">
+                  <option value="">-- 忽略 --</option>
+                  <option v-for="h in mod3.headersA" :key="h" :value="h">{{ h }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="btn-group" style="margin-top:16px">
+              <button class="btn" @click="mod3.step = 1">← 上一步</button>
+              <button class="btn btn-primary" @click="mod3.step = 3">下一步：导入订单表 →</button>
+            </div>
+          </div>
+
+          <!-- 步骤3 -->
+          <div v-if="mod3.step === 3" class="card">
+            <div class="card-title">导入订单走货计划表</div>
+            <div class="alert alert-info">📋 再导入订单表，AI 将自动匹配走货数据到对应订单</div>
+            <div class="upload-area" @click="triggerFileInput('mod3b')" :style="{ pointerEvents: mod3.loadingB ? 'none' : 'auto' }">
+              <div class="upload-icon">📁</div>
+              <div class="upload-text">点击选择订单走货计划表 Excel 文件</div>
+              <div class="upload-hint">支持 .xlsx / .xls</div>
+            </div>
+            <input type="file" ref="mod3bFileInput" accept=".xlsx,.xls" style="display:none" @change="handleFileSelect($event, 'mod3b')">
+            <div v-if="mod3.loadingB" class="alert alert-info" style="margin-top:16px">
+              <span class="spinner"></span> 正在解析文件...
+            </div>
+            <div v-if="mod3.sheetBData.length > 0" class="result-panel" style="margin-top:16px">
+              <div class="result-title">✅ 订单表已导入</div>
+              <div style="color:#52c41a;font-size:14px;margin-bottom:8px">共 {{ mod3.sheetBData.length }} 条订单，{{ mod3.headersB.length }} 个字段</div>
+              <div class="form-group" style="margin-bottom:12px">
+                <label class="form-label">选择订单数据表（Sheet）</label>
+                <select class="form-select" v-model="mod3.selectedSheetB" @change="onSheetChange('mod3b')" style="width:260px">
+                  <option v-for="s in mod3.sheetsB" :key="s" :value="s">{{ s }}</option>
+                </select>
+              </div>
+              <div class="grid-2">
+                <div v-for="f in mod3OrderFields" :key="f.key" class="form-group">
+                  <label class="form-label">订单表 - {{ f.label }}（{{ f.key }}）</label>
+                  <select class="form-select" v-model="mod3.fieldMapB[f.key]">
+                    <option value="">-- 忽略 --</option>
+                    <option v-for="h in mod3.headersB" :key="h" :value="h">{{ h }}</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn btn-primary" style="margin-top:12px" @click="mod3.step = 4; executeMod3Register()">开始AI匹配登记 →</button>
+            </div>
+          </div>
+
+          <!-- 步骤4 -->
+          <div v-if="mod3.step === 4" class="card">
+            <div class="card-title">登记结果</div>
+            <div class="btn-group">
+              <button class="btn btn-primary" @click="executeMod3Register()">🔍 重新匹配</button>
+              <button class="btn" @click="mod3.step = 3">← 修改订单映射</button>
+              <button class="btn" @click="mod3.step = 2">🔧 修改走货映射</button>
+              <button class="btn btn-ai" @click="openAI('mod3')">🤖 AI助手执行操作</button>
+            </div>
+            <div class="result-panel" v-if="mod3.hasResult">
+              <div class="result-title">匹配统计</div>
+              <div class="result-stats">
+                <div class="result-stat">
+                  <div class="stat-num">{{ mod3.sheetAData.length }}</div>
+                  <div class="stat-label">走货记录</div>
+                </div>
+                <div class="result-stat">
+                  <div class="stat-num" style="color:#52c41a">{{ mod3.registered }}</div>
+                  <div class="stat-label">成功登记</div>
+                </div>
+                <div class="result-stat">
+                  <div class="stat-num" style="color:#ff4d4f">{{ mod3.unregistered }}</div>
+                  <div class="stat-label">未匹配</div>
+                </div>
+              </div>
+              <div v-if="mod3.unregistered > 0" class="alert alert-warning" style="margin-bottom:12px">⚠️ 有 {{ mod3.unregistered }} 条走货记录未匹配到订单</div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>序号</th>
+                      <th>走货记录</th>
+                      <th>匹配订单</th>
+                      <th>状态</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(r, idx) in mod3.matchResults" :key="idx">
+                      <td>{{ idx + 1 }}</td>
+                      <td style="font-size:12px">{{ r.shipping }}</td>
+                      <td style="font-size:12px">{{ r.order || '-' }}</td>
+                      <td>
+                        <span :class="r.matched ? 'tag tag-success' : 'tag tag-error'">
+                          {{ r.matched ? '✓ 已登记' : '✗ 未匹配' }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>        <!-- ==================== 模块4: 走船计划 ==================== -->
+        <div v-if="currentModule === 'mod4'" class="module-content">
+          <div class="page-header">
+            <h2>🚢 走船计划</h2>
+            <p>导入走船计划表，按日期范围和目的港筛选走船信息</p>
+          </div>
+
+          <div class="steps">
+            <div class="step" :class="{ active: mod4.step === 1, done: mod4.step > 1 }">
+              <div class="step-icon">{{ mod4.step > 1 ? '✓' : '1' }}</div>
+              <div class="step-text">导入走船计划</div>
+            </div>
+            <div class="step" :class="{ active: mod4.step === 2, done: mod4.step > 2 }">
+              <div class="step-icon">{{ mod4.step > 2 ? '✓' : '2' }}</div>
+              <div class="step-text">配置字段映射</div>
+            </div>
+            <div class="step" :class="{ active: mod4.step === 3 }">
+              <div class="step-icon">3</div>
+              <div class="step-text">查询结果</div>
+            </div>
+          </div>
+
+          <!-- 步骤1 -->
+          <div v-if="mod4.step === 1" class="card">
+            <div class="card-title">导入走船计划表</div>
+            <div class="alert alert-info">📋 支持 .xlsx / .xls 格式</div>
+            <div class="upload-area" @click="triggerFileInput('mod4')" :style="{ pointerEvents: mod4.loading ? 'none' : 'auto' }">
+              <div class="upload-icon">📁</div>
+              <div class="upload-text">点击选择走船计划 Excel 文件</div>
+              <div class="upload-hint">支持 .xlsx / .xls</div>
+            </div>
+            <input type="file" ref="mod4FileInput" accept=".xlsx,.xls" style="display:none" @change="handleFileSelect($event, 'mod4')">
+            <div v-if="mod4.loading" class="alert alert-info" style="margin-top:16px">
+              <span class="spinner"></span> 正在解析文件...
+            </div>
+          </div>
+
+          <!-- 步骤2 -->
+          <div v-if="mod4.step === 2" class="card">
+            <div class="card-title">配置字段映射</div>
+            <div class="alert alert-info">🔧 配置走船计划表字段映射</div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label class="form-label">选择数据表（Sheet）</label>
+              <select class="form-select" v-model="mod4.selectedSheet" @change="onSheetChange('mod4')" style="width:260px">
+                <option v-for="s in mod4.sheets" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="grid-2">
+              <div v-for="f in mod4StandardFields" :key="f.key" class="form-group">
+                <label class="form-label">{{ f.label }}（{{ f.key }}）</label>
+                <select class="form-select" v-model="mod4.fieldMap[f.key]">
+                  <option value="">-- 忽略 --</option>
+                  <option v-for="h in mod4.headers" :key="h" :value="h">{{ h }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="btn-group" style="margin-top:16px">
+              <button class="btn" @click="mod4.step = 1">← 重新导入</button>
+              <button class="btn btn-primary" @click="mod4.step = 3; executeMod4Query()">确认映射并查询 →</button>
+            </div>
+          </div>
+
+          <!-- 步骤3 -->
+          <div v-if="mod4.step === 3" class="card">
+            <div class="card-title">查询结果</div>
+            <div class="grid-2" style="margin-bottom:16px">
+              <div class="form-group">
+                <label class="form-label">起始日期</label>
+                <input type="date" class="form-input" v-model="mod4.startDate">
+              </div>
+              <div class="form-group">
+                <label class="form-label">结束日期</label>
+                <input type="date" class="form-input" v-model="mod4.endDate">
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:16px">
+              <label class="form-label">目的港筛选（可选）</label>
+              <input type="text" class="form-input" v-model="mod4.portFilter" placeholder="输入目的港关键词" style="width:300px">
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-primary" @click="executeMod4Query()">🔍 筛选</button>
+              <button class="btn" @click="mod4.step = 2">🔧 修改映射</button>
+              <button class="btn" @click="mod4.step = 1; resetMod4()">📂 重新导入</button>
+              <button class="btn btn-ai" @click="openAI('mod4')">🤖 AI助手执行操作</button>
+            </div>
+            <div class="result-panel" v-if="mod4.results.length > 0">
+              <div class="result-title">筛选结果</div>
+              <div class="result-stats">
+                <div class="result-stat">
+                  <div class="stat-num">{{ mod4.results.length }}</div>
+                  <div class="stat-label">匹配记录数</div>
+                </div>
+              </div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>序号</th>
+                      <th v-for="f in mod4.displayFields" :key="f.key">{{ f.label }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(row, idx) in mod4.results" :key="idx">
+                      <td>{{ idx + 1 }}</td>
+                      <td v-for="f in mod4.displayFields" :key="f.key">{{ formatCell(row, f) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div v-else-if="mod4.step === 3 && !mod4.loading" class="empty-state">
+              <div class="empty-icon">📭</div>
+              <div class="empty-text">暂无符合条件的记录</div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Module 2: 订单明细录入 -->
-      <div v-if="currentModule === 1" class="module-content">
-        <div class="page-header">
-          <h2>订单明细录入</h2>
-          <p>上传Excel文件解析订单数据，确认后写入飞书表格</p>
-        </div>
+        <!-- ==================== 模块5: 数据维护 ==================== -->
+        <div v-if="currentModule === 'mod5'" class="module-content">
+          <div class="page-header">
+            <h2>🔧 数据维护</h2>
+            <p>导入Excel文件，预览数据，通过AI指令更新到飞书表格</p>
+          </div>
 
-        <div class="steps">
-          <div class="step" :class="{ active: mod2.step === 1, done: mod2.step > 1 }">
-            <div class="step-icon">{{ mod2.step > 1 ? '✓' : '1' }}</div>
-            <div class="step-text">选择目标表</div>
-          </div>
-          <div class="step" :class="{ active: mod2.step === 2, done: mod2.step > 2 }">
-            <div class="step-icon">{{ mod2.step > 2 ? '✓' : '2' }}</div>
-            <div class="step-text">上传文件</div>
-          </div>
-          <div class="step" :class="{ active: mod2.step === 3, done: mod2.step > 3 }">
-            <div class="step-icon">{{ mod2.step > 3 ? '✓' : '3' }}</div>
-            <div class="step-text">预览数据</div>
-          </div>
-          <div class="step" :class="{ active: mod2.step === 4 }">
-            <div class="step-icon">{{ mod2.step >= 4 ? '✓' : '4' }}</div>
-            <div class="step-text">确认登记</div>
-          </div>
-        </div>
-
-        <!-- Target table selection -->
-        <div class="card">
-          <div class="card-title">目标飞书表</div>
-          <div class="form-group">
-            <label class="form-label">选择预设表</label>
-            <select class="form-select" v-model="mod2.selectedTable">
-              <option value="">-- 请选择目标飞书表 --</option>
-              <option v-for="t in presetTables" :key="t.token" :value="t.token">{{ t.name }}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">或手动输入飞书表链接</label>
-            <input class="form-input" v-model="mod2.customUrl" placeholder="粘贴飞书多维表格链接，如 https://xxx.feishu.cn/base/xxx">
-          </div>
-        </div>
-
-        <!-- Upload area -->
-        <div class="card">
-          <div class="card-title">上传Excel文件</div>
-          <div class="upload-area" @click="triggerFileUpload" @dragover.prevent @drop.prevent="handleFileDrop">
-            <div class="upload-icon">📁</div>
-            <div class="upload-text" v-if="!mod2.fileName">点击或拖拽Excel文件到此处上传</div>
-            <div class="upload-text" v-else>已选择: {{ mod2.fileName }}</div>
-            <div class="upload-hint">支持 .xlsx, .xls 格式</div>
-            <input type="file" ref="fileInput" accept=".xlsx,.xls" style="display:none" @change="handleFileSelect">
-          </div>
-        </div>
-
-        <!-- Preview -->
-        <div class="card" v-if="mod2.parsedData.length > 0">
-          <div class="card-title">数据预览 ({{ mod2.parsedData.length }} 条记录)</div>
-          <div class="alert alert-info" v-if="mod2.fieldMapping.length > 0">
-            📋 字段映射: {{ mod2.fieldMapping.map(m => m.from + ' → ' + m.to).join(', ') }}
-          </div>
-          <div class="table-container" style="max-height: 400px; overflow-y: auto;">
-            <table class="data-table">
-              <thead>
-                <tr><th v-for="h in mod2.headers" :key="h">{{ h }}</th></tr>
-              </thead>
-              <tbody>
-                <tr v-for="(row, i) in mod2.parsedData.slice(0, 50)" :key="i">
-                  <td v-for="h in mod2.headers" :key="h">{{ row[h] || '' }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div v-if="mod2.parsedData.length > 50" class="alert alert-warning" style="margin-top:12px">
-            ⚠️ 数据超过50条，仅显示前50条预览。
-          </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="card">
-          <div class="card-title">操作区</div>
-          <div class="btn-group">
-            <button class="btn btn-primary" @click="mod2Preview" :disabled="mod2.parsedData.length === 0 || (!mod2.selectedTable && !mod2.customUrl)">
-              👁️ 预览
-            </button>
-            <button class="btn btn-success" @click="mod2Confirm" :disabled="mod2.step < 3">
-              ✅ 确认登记
-            </button>
-            <button class="btn" @click="mod2Reset">🔄 重置</button>
-            <button class="btn-ai" @click="openAI('mod2')">🤖 AI助手执行操作</button>
-          </div>
-        </div>
-
-        <!-- Result -->
-        <div v-if="mod2.result" class="card">
-          <div class="card-title">登记结果</div>
-          <div class="result-panel">
-            <div class="result-stats">
-              <div class="result-stat"><div class="stat-num" style="color:#52c41a">{{ mod2.result.success }}</div><div class="stat-label">成功</div></div>
-              <div class="result-stat"><div class="stat-num" style="color:#ff4d4f">{{ mod2.result.failed }}</div><div class="stat-label">失败</div></div>
-              <div class="result-stat"><div class="stat-num">{{ mod2.result.total }}</div><div class="stat-label">总计</div></div>
+          <div class="steps">
+            <div class="step" :class="{ active: mod5.step === 1, done: mod5.step > 1 }">
+              <div class="step-icon">{{ mod5.step > 1 ? '✓' : '1' }}</div>
+              <div class="step-text">导入数据</div>
             </div>
-            <div v-if="mod2.result.failedDetails.length > 0">
-              <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#ff4d4f">失败明细：</div>
-              <div class="validation-list">
-                <div class="validation-item error" v-for="(d, i) in mod2.result.failedDetails" :key="i">
-                  <span class="line-num">{{ d.row }}</span>
-                  <span class="line-content">{{ d.reason }}</span>
+            <div class="step" :class="{ active: mod5.step === 2, done: mod5.step > 2 }">
+              <div class="step-icon">{{ mod5.step > 2 ? '✓' : '2' }}</div>
+              <div class="step-text">配置字段映射</div>
+            </div>
+            <div class="step" :class="{ active: mod5.step === 3 }">
+              <div class="step-icon">3</div>
+              <div class="step-text">预览与操作</div>
+            </div>
+          </div>
+
+          <!-- 步骤1 -->
+          <div v-if="mod5.step === 1" class="card">
+            <div class="card-title">导入Excel数据</div>
+            <div class="alert alert-info">📋 导入需要维护的 Excel 数据文件</div>
+            <div class="upload-area" @click="triggerFileInput('mod5')" :style="{ pointerEvents: mod5.loading ? 'none' : 'auto' }">
+              <div class="upload-icon">📁</div>
+              <div class="upload-text">点击选择 Excel 文件</div>
+              <div class="upload-hint">支持 .xlsx / .xls</div>
+            </div>
+            <input type="file" ref="mod5FileInput" accept=".xlsx,.xls" style="display:none" @change="handleFileSelect($event, 'mod5')">
+            <div v-if="mod5.loading" class="alert alert-info" style="margin-top:16px">
+              <span class="spinner"></span> 正在解析文件...
+            </div>
+          </div>
+
+          <!-- 步骤2 -->
+          <div v-if="mod5.step === 2" class="card">
+            <div class="card-title">配置字段映射</div>
+            <div class="alert alert-info">🔧 配置导入数据的字段映射</div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label class="form-label">选择数据表（Sheet）</label>
+              <select class="form-select" v-model="mod5.selectedSheet" @change="onSheetChange('mod5')" style="width:260px">
+                <option v-for="s in mod5.sheets" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="grid-2">
+              <div v-for="f in mod5StandardFields" :key="f.key" class="form-group">
+                <label class="form-label">{{ f.label }}（{{ f.key }}）</label>
+                <select class="form-select" v-model="mod5.fieldMap[f.key]">
+                  <option value="">-- 忽略 --</option>
+                  <option v-for="h in mod5.headers" :key="h" :value="h">{{ h }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="btn-group" style="margin-top:16px">
+              <button class="btn" @click="mod5.step = 1">← 重新导入</button>
+              <button class="btn btn-primary" @click="mod5.step = 3">确认映射并预览 →</button>
+            </div>
+          </div>
+
+          <!-- 步骤3 -->
+          <div v-if="mod5.step === 3" class="card">
+            <div class="card-title">数据预览与操作</div>
+            <div class="alert alert-info">📋 以下为映射后的数据预览，可通过 AI 助手执行数据更新操作</div>
+            <div class="btn-group">
+              <button class="btn" @click="mod5.step = 2">🔧 修改映射</button>
+              <button class="btn" @click="mod5.step = 1; resetMod5()">📂 重新导入</button>
+              <button class="btn btn-ai" @click="openAI('mod5')">🤖 AI助手执行操作</button>
+            </div>
+            <div class="result-panel" v-if="mod5.data.length > 0">
+              <div class="result-title">数据预览（共 {{ mod5.data.length }} 条）</div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>序号</th>
+                      <th v-for="f in mod5.displayFields" :key="f.key">{{ f.label }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(row, idx) in mod5.data" :key="idx">
+                      <td>{{ idx + 1 }}</td>
+                      <td v-for="f in mod5.displayFields" :key="f.key">{{ formatCell(row, f) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div v-else class="empty-state">
+              <div class="empty-icon">📭</div>
+              <div class="empty-text">暂无数据</div>
+            </div>
+          </div>
+        </div>        <!-- ==================== 模块4: 走船计划 ==================== -->
+        <div v-if="currentModule === 'mod4'" class="module-content">
+          <div class="page-header">
+            <h2>🚢 走船计划</h2>
+            <p>导入走船计划表，按日期范围和目的港筛选走船信息</p>
+          </div>
+
+          <div class="steps">
+            <div class="step" :class="{ active: mod4.step === 1, done: mod4.step > 1 }">
+              <div class="step-icon">{{ mod4.step > 1 ? '✓' : '1' }}</div>
+              <div class="step-text">导入走船计划</div>
+            </div>
+            <div class="step" :class="{ active: mod4.step === 2, done: mod4.step > 2 }">
+              <div class="step-icon">{{ mod4.step > 2 ? '✓' : '2' }}</div>
+              <div class="step-text">配置字段映射</div>
+            </div>
+            <div class="step" :class="{ active: mod4.step === 3 }">
+              <div class="step-icon">3</div>
+              <div class="step-text">查询结果</div>
+            </div>
+          </div>
+
+          <!-- 步骤1 -->
+          <div v-if="mod4.step === 1" class="card">
+            <div class="card-title">导入走船计划表</div>
+            <div class="alert alert-info">📋 支持 .xlsx / .xls 格式</div>
+            <div class="upload-area" @click="triggerFileInput('mod4')" :style="{ pointerEvents: mod4.loading ? 'none' : 'auto' }">
+              <div class="upload-icon">📁</div>
+              <div class="upload-text">点击选择走船计划 Excel 文件</div>
+              <div class="upload-hint">支持 .xlsx / .xls</div>
+            </div>
+            <input type="file" ref="mod4FileInput" accept=".xlsx,.xls" style="display:none" @change="handleFileSelect($event, 'mod4')">
+            <div v-if="mod4.loading" class="alert alert-info" style="margin-top:16px">
+              <span class="spinner"></span> 正在解析文件...
+            </div>
+          </div>
+
+          <!-- 步骤2 -->
+          <div v-if="mod4.step === 2" class="card">
+            <div class="card-title">配置字段映射</div>
+            <div class="alert alert-info">🔧 配置走船计划表字段映射</div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label class="form-label">选择数据表（Sheet）</label>
+              <select class="form-select" v-model="mod4.selectedSheet" @change="onSheetChange('mod4')" style="width:260px">
+                <option v-for="s in mod4.sheets" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="grid-2">
+              <div v-for="f in mod4StandardFields" :key="f.key" class="form-group">
+                <label class="form-label">{{ f.label }}（{{ f.key }}）</label>
+                <select class="form-select" v-model="mod4.fieldMap[f.key]">
+                  <option value="">-- 忽略 --</option>
+                  <option v-for="h in mod4.headers" :key="h" :value="h">{{ h }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="btn-group" style="margin-top:16px">
+              <button class="btn" @click="mod4.step = 1">← 重新导入</button>
+              <button class="btn btn-primary" @click="mod4.step = 3; executeMod4Query()">确认映射并查询 →</button>
+            </div>
+          </div>
+
+          <!-- 步骤3 -->
+          <div v-if="mod4.step === 3" class="card">
+            <div class="card-title">查询结果</div>
+            <div class="grid-2" style="margin-bottom:16px">
+              <div class="form-group">
+                <label class="form-label">起始日期</label>
+                <input type="date" class="form-input" v-model="mod4.startDate">
+              </div>
+              <div class="form-group">
+                <label class="form-label">结束日期</label>
+                <input type="date" class="form-input" v-model="mod4.endDate">
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:16px">
+              <label class="form-label">目的港筛选（可选）</label>
+              <input type="text" class="form-input" v-model="mod4.portFilter" placeholder="输入目的港关键词" style="width:300px">
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-primary" @click="executeMod4Query()">🔍 筛选</button>
+              <button class="btn" @click="mod4.step = 2">🔧 修改映射</button>
+              <button class="btn" @click="mod4.step = 1; resetMod4()">📂 重新导入</button>
+              <button class="btn btn-ai" @click="openAI('mod4')">🤖 AI助手执行操作</button>
+            </div>
+            <div class="result-panel" v-if="mod4.results.length > 0">
+              <div class="result-title">筛选结果</div>
+              <div class="result-stats">
+                <div class="result-stat">
+                  <div class="stat-num">{{ mod4.results.length }}</div>
+                  <div class="stat-label">匹配记录数</div>
+                </div>
+              </div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>序号</th>
+                      <th v-for="f in mod4.displayFields" :key="f.key">{{ f.label }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(row, idx) in mod4.results" :key="idx">
+                      <td>{{ idx + 1 }}</td>
+                      <td v-for="f in mod4.displayFields" :key="f.key">{{ formatCell(row, f) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div v-else-if="mod4.step === 3 && !mod4.loading" class="empty-state">
+              <div class="empty-icon">📭</div>
+              <div class="empty-text">暂无符合条件的记录</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== 模块5: 数据维护 ==================== -->
+        <div v-if="currentModule === 'mod5'" class="module-content">
+          <div class="page-header">
+            <h2>🔧 数据维护</h2>
+            <p>导入Excel文件，预览数据，通过AI指令更新到飞书表格</p>
+          </div>
+
+          <div class="steps">
+            <div class="step" :class="{ active: mod5.step === 1, done: mod5.step > 1 }">
+              <div class="step-icon">{{ mod5.step > 1 ? '✓' : '1' }}</div>
+              <div class="step-text">导入数据</div>
+            </div>
+            <div class="step" :class="{ active: mod5.step === 2, done: mod5.step > 2 }">
+              <div class="step-icon">{{ mod5.step > 2 ? '✓' : '2' }}</div>
+              <div class="step-text">配置字段映射</div>
+            </div>
+            <div class="step" :class="{ active: mod5.step === 3 }">
+              <div class="step-icon">3</div>
+              <div class="step-text">预览与操作</div>
+            </div>
+          </div>
+
+          <!-- 步骤1 -->
+          <div v-if="mod5.step === 1" class="card">
+            <div class="card-title">导入Excel数据</div>
+            <div class="alert alert-info">📋 导入需要维护的 Excel 数据文件</div>
+            <div class="upload-area" @click="triggerFileInput('mod5')" :style="{ pointerEvents: mod5.loading ? 'none' : 'auto' }">
+              <div class="upload-icon">📁</div>
+              <div class="upload-text">点击选择 Excel 文件</div>
+              <div class="upload-hint">支持 .xlsx / .xls</div>
+            </div>
+            <input type="file" ref="mod5FileInput" accept=".xlsx,.xls" style="display:none" @change="handleFileSelect($event, 'mod5')">
+            <div v-if="mod5.loading" class="alert alert-info" style="margin-top:16px">
+              <span class="spinner"></span> 正在解析文件...
+            </div>
+          </div>
+
+          <!-- 步骤2 -->
+          <div v-if="mod5.step === 2" class="card">
+            <div class="card-title">配置字段映射</div>
+            <div class="alert alert-info">🔧 配置导入数据的字段映射</div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label class="form-label">选择数据表（Sheet）</label>
+              <select class="form-select" v-model="mod5.selectedSheet" @change="onSheetChange('mod5')" style="width:260px">
+                <option v-for="s in mod5.sheets" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="grid-2">
+              <div v-for="f in mod5StandardFields" :key="f.key" class="form-group">
+                <label class="form-label">{{ f.label }}（{{ f.key }}）</label>
+                <select class="form-select" v-model="mod5.fieldMap[f.key]">
+                  <option value="">-- 忽略 --</option>
+                  <option v-for="h in mod5.headers" :key="h" :value="h">{{ h }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="btn-group" style="margin-top:16px">
+              <button class="btn" @click="mod5.step = 1">← 重新导入</button>
+              <button class="btn btn-primary" @click="mod5.step = 3">确认映射并预览 →</button>
+            </div>
+          </div>
+
+          <!-- 步骤3 -->
+          <div v-if="mod5.step === 3" class="card">
+            <div class="card-title">数据预览与操作</div>
+            <div class="alert alert-info">📋 以下为映射后的数据预览，可通过 AI 助手执行数据更新操作</div>
+            <div class="btn-group">
+              <button class="btn" @click="mod5.step = 2">🔧 修改映射</button>
+              <button class="btn" @click="mod5.step = 1; resetMod5()">📂 重新导入</button>
+              <button class="btn btn-ai" @click="openAI('mod5')">🤖 AI助手执行操作</button>
+            </div>
+            <div class="result-panel" v-if="mod5.data.length > 0">
+              <div class="result-title">数据预览（共 {{ mod5.data.length }} 条）</div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>序号</th>
+                      <th v-for="f in mod5.displayFields" :key="f.key">{{ f.label }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(row, idx) in mod5.data" :key="idx">
+                      <td>{{ idx + 1 }}</td>
+                      <td v-for="f in mod5.displayFields" :key="f.key">{{ formatCell(row, f) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div v-else class="empty-state">
+              <div class="empty-icon">📭</div>
+              <div class="empty-text">暂无数据</div>
+            </div>
+          </div>
+        </div>        <!-- ==================== AI 助手弹窗 ==================== -->
+        <div v-if="aiVisible" class="ai-modal-overlay" @click.self="aiVisible = false">
+          <div class="ai-modal">
+            <div class="ai-modal-header">
+              <div class="ai-title">🤖 AI 助手</div>
+              <button class="ai-close" @click="aiVisible = false">✕</button>
+            </div>
+            <div class="ai-chat-area" ref="aiChatArea">
+              <div class="ai-msg bot">
+                <div class="ai-avatar">🤖</div>
+                <div class="ai-bubble">你好！我是AI助手。你可以告诉我你想执行的操作，我会将指令复制到剪贴板，你只需前往 Coze 对话窗口粘贴发送即可。</div>
+              </div>
+              <div v-for="(msg, idx) in aiMessages" :key="idx" class="ai-msg" :class="msg.role">
+                <div class="ai-avatar">{{ msg.role === 'bot' ? '🤖' : '我' }}</div>
+                <div class="ai-bubble">
+                  <div>{{ msg.text }}</div>
+                  <div v-if="msg.copied" style="font-size:11px;color:#52c41a;margin-top:4px">✓ 已复制到剪贴板，请前往 Coze 对话粘贴发送</div>
                 </div>
               </div>
             </div>
-            <div class="alert alert-info" style="margin-top:12px">
-              💡 请在对话中发送指令执行实际写入操作，当前结果仅为前端模拟。
+            <div class="ai-quick-actions" v-if="aiQuickActions.length > 0">
+              <button v-for="(cmd, idx) in aiQuickActions" :key="idx" class="ai-quick-btn" @click="sendAI(cmd)">{{ cmd }}</button>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Module 3: 货柜计划登记 -->
-      <div v-if="currentModule === 2" class="module-content">
-        <div class="page-header">
-          <h2>货柜计划登记</h2>
-          <p>从8月货柜计划表加载数据，写入26年走船计划表</p>
-        </div>
-
-        <div class="steps">
-          <div class="step" :class="{ active: mod3.step === 1, done: mod3.step > 1 }">
-            <div class="step-icon">{{ mod3.step > 1 ? '✓' : '1' }}</div>
-            <div class="step-text">加载计划</div>
-          </div>
-          <div class="step" :class="{ active: mod3.step === 2, done: mod3.step > 2 }">
-            <div class="step-icon">{{ mod3.step > 2 ? '✓' : '2' }}</div>
-            <div class="step-text">预览</div>
-          </div>
-          <div class="step" :class="{ active: mod3.step === 3 }">
-            <div class="step-icon">{{ mod3.step >= 3 ? '✓' : '3' }}</div>
-            <div class="step-text">确认登记</div>
-          </div>
-        </div>
-
-        <!-- Config -->
-        <div class="card">
-          <div class="card-title">数据源配置</div>
-          <div class="grid-2">
-            <div>
-              <div class="config-row"><span class="config-label">数据源:</span><span class="config-value">{{ shippingPlanTable.name }}</span></div>
-              <div class="config-row"><span class="config-label">源Sheet:</span><span class="config-value">8月货柜计划 (eOEmuF)</span></div>
-            </div>
-            <div>
-              <div class="config-row"><span class="config-label">目标表:</span><span class="config-value">{{ shippingPlanTable.name }}</span></div>
-              <div class="config-row"><span class="config-label">目标Sheet:</span><span class="config-value">26年走船计划 (Ocj58O)</span></div>
+            <div class="ai-input-area">
+              <input v-model="aiInput" placeholder="输入你想执行的操作..." @keyup.enter="sendAI(aiInput)" :disabled="!aiInput.trim()">
+              <button @click="sendAI(aiInput)" :disabled="!aiInput.trim()">发送</button>
             </div>
           </div>
         </div>
 
-        <!-- Actions -->
-        <div class="card">
-          <div class="card-title">操作区</div>
-          <div class="btn-group">
-            <button class="btn btn-primary" @click="mod3Load" :disabled="mod3.step > 1">
-              <span v-if="mod3.loading" class="spinner"></span>
-              📥 加载计划
-            </button>
-            <button class="btn btn-success" @click="mod3Preview" :disabled="mod3.step !== 2">
-              👁️ 预览
-            </button>
-            <button class="btn btn-warning" @click="mod3Confirm" :disabled="mod3.step !== 2 || !mod3.previewed">
-              ✅ 确认登记
-            </button>
-            <button class="btn" @click="mod3Reset">🔄 重置</button>
-            <button class="btn-ai" @click="openAI('mod3')">🤖 AI助手执行操作</button>
-          </div>
-        </div>
-
-        <!-- Preview table -->
-        <div v-if="mod3.planData.length > 0" class="card">
-          <div class="card-title">待写入数据预览 ({{ mod3.planData.length }} 条)</div>
-          <div class="table-container" style="max-height: 500px; overflow: auto;">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>货柜编号</th><th>工厂</th><th>船期</th><th>船运方式</th><th>起运港</th>
-                  <th>截单</th><th>商检</th><th>实际</th><th>预计装柜</th><th>订船计划</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(row, i) in mod3.planData" :key="i">
-                  <td>{{ row.id }}</td><td>{{ row.factory }}</td><td>{{ row.shipping }}</td><td>{{ row.method }}</td>
-                  <td>{{ row.port }}</td><td>{{ row.cutoff }}</td><td>{{ row.inspection }}</td>
-                  <td>{{ row.actual }}</td><td>{{ row.loading }}</td><td>{{ row.booking }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Result -->
-        <div v-if="mod3.result" class="card">
-          <div class="card-title">登记结果</div>
-          <div class="result-panel">
-            <div class="alert" :class="mod3.result.success ? 'alert-success' : 'alert-error'">
-              {{ mod3.result.success ? '✅ 数据已成功准备，请在对话中发送指令执行实际写入。' : '❌ 操作失败：' + mod3.result.message }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Module 4: 工厂下线数据 -->
-      <div v-if="currentModule === 3" class="module-content">
-        <div class="page-header">
-          <h2>工厂下线数据</h2>
-          <p>批量录入工厂下线数据，支持文本解析和格式校验</p>
-        </div>
-
-        <div class="steps">
-          <div class="step" :class="{ active: mod4.step === 1, done: mod4.step > 1 }">
-            <div class="step-icon">{{ mod4.step > 1 ? '✓' : '1' }}</div>
-            <div class="step-text">选择目标表</div>
-          </div>
-          <div class="step" :class="{ active: mod4.step === 2, done: mod4.step > 2 }">
-            <div class="step-icon">{{ mod4.step > 2 ? '✓' : '2' }}</div>
-            <div class="step-text">输入数据</div>
-          </div>
-          <div class="step" :class="{ active: mod4.step === 3, done: mod4.step > 3 }">
-            <div class="step-icon">{{ mod4.step > 3 ? '✓' : '3' }}</div>
-            <div class="step-text">解析校验</div>
-          </div>
-          <div class="step" :class="{ active: mod4.step === 4 }">
-            <div class="step-icon">{{ mod4.step >= 4 ? '✓' : '4' }}</div>
-            <div class="step-text">确认登记</div>
-          </div>
-        </div>
-
-        <!-- Target table -->
-        <div class="card">
-          <div class="card-title">目标飞书表</div>
-          <select class="form-select" v-model="mod4.selectedTable">
-            <option value="">-- 请选择目标飞书表 --</option>
-            <option v-for="t in presetTables" :key="t.token" :value="t.token">{{ t.name }}</option>
-          </select>
-        </div>
-
-        <!-- Input -->
-        <div class="card">
-          <div class="card-title">输入数据</div>
-          <div class="alert alert-info">
-            📝 每行一条记录，格式为：<strong>合同号-SKU-完成数量</strong>
-          </div>
-          <div class="alert alert-warning">
-            💡 示例：<br>
-            <code style="display:block;margin-top:4px;line-height:1.8">26210-1ST064B-301<br>26210-1ST064H-301<br>26210-1ST064X-183</code>
-          </div>
-          <textarea class="form-textarea" v-model="mod4.inputText" rows="10" placeholder="在此粘贴数据，每行一条..."></textarea>
-        </div>
-
-        <!-- Validation result -->
-        <div class="card" v-if="mod4.validationResults.length > 0">
-          <div class="card-title">校验结果</div>
-          <div class="result-stats" style="margin-bottom:16px">
-            <div class="result-stat"><div class="stat-num" style="color:#52c41a">{{ mod4.validCount }}</div><div class="stat-label">通过</div></div>
-            <div class="result-stat"><div class="stat-num" style="color:#ff4d4f">{{ mod4.invalidCount }}</div><div class="stat-label">失败</div></div>
-            <div class="result-stat"><div class="stat-num">{{ mod4.validationResults.length }}</div><div class="stat-label">总计</div></div>
-          </div>
-          <div class="validation-list">
-            <div class="validation-item" v-for="(item, i) in mod4.validationResults" :key="i"
-                 :class="item.valid ? 'success' : 'error'">
-              <span class="line-num">{{ i + 1 }}</span>
-              <span class="line-content">{{ item.raw }}</span>
-              <span class="status">
-                <span v-if="item.valid" class="tag tag-success">✅ 合同:{{ item.contract }} SKU:{{ item.sku }} 数量:{{ item.qty }}</span>
-                <span v-else class="tag tag-error">❌ {{ item.error }}</span>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="card">
-          <div class="card-title">操作区</div>
-          <div class="btn-group">
-            <button class="btn btn-primary" @click="mod4Parse" :disabled="!mod4.inputText.trim()">
-              🔍 解析
-            </button>
-            <button class="btn btn-success" @click="mod4Validate" :disabled="mod4.validationResults.length === 0">
-              ✅ 校验
-            </button>
-            <button class="btn btn-warning" @click="mod4Confirm" :disabled="mod4.validCount === 0 || !mod4.selectedTable">
-              📤 确认登记
-            </button>
-            <button class="btn" @click="mod4Reset">🔄 重置</button>
-            <button class="btn-ai" @click="openAI('mod4')">🤖 AI助手执行操作</button>
-          </div>
-        </div>
-
-        <!-- Result -->
-        <div v-if="mod4.result" class="card">
-          <div class="card-title">登记结果</div>
-          <div class="result-panel">
-            <div class="result-stats">
-              <div class="result-stat"><div class="stat-num" style="color:#52c41a">{{ mod4.result.success }}</div><div class="stat-label">成功</div></div>
-              <div class="result-stat"><div class="stat-num" style="color:#ff4d4f">{{ mod4.result.failed }}</div><div class="stat-label">失败</div></div>
-            </div>
-            <div class="alert alert-info" style="margin-top:12px">
-              💡 请在对话中发送指令执行实际写入操作。
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Module 5: 质检验货数据 -->
-      <div v-if="currentModule === 4" class="module-content">
-        <div class="page-header">
-          <h2>质检验货数据</h2>
-          <p>批量录入质检验货数据，支持尾数解析</p>
-        </div>
-
-        <div class="steps">
-          <div class="step" :class="{ active: mod5.step === 1, done: mod5.step > 1 }">
-            <div class="step-icon">{{ mod5.step > 1 ? '✓' : '1' }}</div>
-            <div class="step-text">选择目标表</div>
-          </div>
-          <div class="step" :class="{ active: mod5.step === 2, done: mod5.step > 2 }">
-            <div class="step-icon">{{ mod5.step > 2 ? '✓' : '2' }}</div>
-            <div class="step-text">输入数据</div>
-          </div>
-          <div class="step" :class="{ active: mod5.step === 3, done: mod5.step > 3 }">
-            <div class="step-icon">{{ mod5.step > 3 ? '✓' : '3' }}</div>
-            <div class="step-text">解析校验</div>
-          </div>
-          <div class="step" :class="{ active: mod5.step === 4 }">
-            <div class="step-icon">{{ mod5.step >= 4 ? '✓' : '4' }}</div>
-            <div class="step-text">确认登记</div>
-          </div>
-        </div>
-
-        <!-- Target table -->
-        <div class="card">
-          <div class="card-title">目标飞书表</div>
-          <select class="form-select" v-model="mod5.selectedTable">
-            <option value="">-- 请选择目标飞书表 --</option>
-            <option v-for="t in presetTables" :key="t.token" :value="t.token">{{ t.name }}</option>
-          </select>
-        </div>
-
-        <!-- Input -->
-        <div class="card">
-          <div class="card-title">输入数据</div>
-          <div class="alert alert-info">
-            📝 每行一条记录，格式为：<strong>SU-{合同号}-{SKU}-{数量}套</strong>，可带尾数
-          </div>
-          <div class="alert alert-warning">
-            💡 示例：<br>
-            <code style="display:block;margin-top:4px;line-height:1.8">
-SU-26206-2CD149Z-315套<br>
-SU-26208-2CD148B-259 尾数6套<br>
-SU-26206-2CD149B-250套，尾数15套</code>
-          </div>
-          <textarea class="form-textarea" v-model="mod5.inputText" rows="10" placeholder="在此粘贴数据，每行一条..."></textarea>
-        </div>
-
-        <!-- Validation -->
-        <div class="card" v-if="mod5.validationResults.length > 0">
-          <div class="card-title">校验结果</div>
-          <div class="result-stats" style="margin-bottom:16px">
-            <div class="result-stat"><div class="stat-num" style="color:#52c41a">{{ mod5.validCount }}</div><div class="stat-label">通过</div></div>
-            <div class="result-stat"><div class="stat-num" style="color:#ff4d4f">{{ mod5.invalidCount }}</div><div class="stat-label">失败</div></div>
-            <div class="result-stat"><div class="stat-num">{{ mod5.validationResults.length }}</div><div class="stat-label">总计</div></div>
-          </div>
-          <div class="validation-list">
-            <div class="validation-item" v-for="(item, i) in mod5.validationResults" :key="i"
-                 :class="item.valid ? 'success' : 'error'">
-              <span class="line-num">{{ i + 1 }}</span>
-              <span class="line-content">{{ item.raw }}</span>
-              <span class="status">
-                <span v-if="item.valid" class="tag tag-success">
-                  ✅ 合同:{{ item.contract }} SKU:{{ item.sku }} 数量:{{ item.qty }}套
-                  <span v-if="item.remainder" style="color:#faad14"> | 尾数:{{ item.remainder }}套</span>
-                </span>
-                <span v-else class="tag tag-error">❌ {{ item.error }}</span>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="card">
-          <div class="card-title">操作区</div>
-          <div class="btn-group">
-            <button class="btn btn-primary" @click="mod5Parse" :disabled="!mod5.inputText.trim()">
-              🔍 解析
-            </button>
-            <button class="btn btn-success" @click="mod5Validate" :disabled="mod5.validationResults.length === 0">
-              ✅ 校验
-            </button>
-            <button class="btn btn-warning" @click="mod5Confirm" :disabled="mod5.validCount === 0 || !mod5.selectedTable">
-              📤 确认登记
-            </button>
-            <button class="btn" @click="mod5Reset">🔄 重置</button>
-            <button class="btn-ai" @click="openAI('mod5')">🤖 AI助手执行操作</button>
-          </div>
-        </div>
-
-        <!-- Result -->
-        <div v-if="mod5.result" class="card">
-          <div class="card-title">登记结果</div>
-          <div class="result-panel">
-            <div class="result-stats">
-              <div class="result-stat"><div class="stat-num" style="color:#52c41a">{{ mod5.result.success }}</div><div class="stat-label">成功</div></div>
-              <div class="result-stat"><div class="stat-num" style="color:#ff4d4f">{{ mod5.result.failed }}</div><div class="stat-label">失败</div></div>
-            </div>
-            <div v-if="mod5.remainderSummary.length > 0" style="margin-top:12px">
-              <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#faad14">📦 尾数信息汇总：</div>
-              <div class="validation-list">
-                <div class="validation-item success" v-for="(r, i) in mod5.remainderSummary" :key="i">
-                  <span class="line-num">{{ i + 1 }}</span>
-                  <span class="line-content">合同:{{ r.contract }} SKU:{{ r.sku }} → 尾数:{{ r.remainder }}套</span>
-                </div>
-              </div>
-            </div>
-            <div class="alert alert-info" style="margin-top:12px">
-              💡 请在对话中发送指令执行实际写入操作。
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- AI Assistant Modal -->
-  <div class="ai-modal-overlay" v-if="aiModal.show" @click.self="closeAI">
-    <div class="ai-modal">
-      <div class="ai-modal-header">
-        <div class="ai-title">🤖 AI助手 - {{ aiModal.moduleName }}</div>
-        <button class="ai-close" @click="closeAI">✕</button>
-      </div>
-      <div class="ai-chat-area" ref="aiChatArea">
-        <div class="ai-msg bot">
-          <div class="ai-avatar">🤖</div>
-          <div class="ai-bubble">{{ aiModal.welcome }}</div>
-        </div>
-        <template v-for="(msg, i) in aiModal.messages" :key="i">
-          <div class="ai-msg" :class="msg.role">
-            <div class="ai-avatar">{{ msg.role === 'user' ? '👤' : '🤖' }}</div>
-            <div class="ai-bubble" v-html="msg.text"></div>
-          </div>
-        </template>
-      </div>
-      <div class="ai-quick-actions" v-if="aiModal.quickActions.length > 0">
-        <button class="ai-quick-btn" v-for="(action, i) in aiModal.quickActions" :key="i" @click="sendAI(action.cmd)">{{ action.label }}</button>
-      </div>
-      <div class="ai-input-area">
-        <input v-model="aiModal.inputText" @keyup.enter="sendAI()" placeholder="输入操作指令..." :disabled="aiModal.sending">
-        <button @click="sendAI()" :disabled="!aiModal.inputText.trim() || aiModal.sending">发送</button>
       </div>
     </div>
-  </div>
-</div>
+  </div>  <script>
+    const { createApp, ref, reactive, computed, watch, nextTick, onMounted } = Vue;
 
-<script>
-const { createApp, reactive, ref, computed } = Vue;
+    const app = createApp({
+      setup() {
+        const sidebarCollapsed = ref(false);
+        const currentModule = ref('mod1');
 
-const app = createApp({
-  setup() {
-    const sidebarCollapsed = ref(false);
-    const currentModule = ref(0);
-    
-    const menuItems = [
-      { label: '走货匹配拆解', icon: '🔗' },
-      { label: '订单明细录入', icon: '📋' },
-      { label: '货柜计划登记', icon: '🚢' },
-      { label: '工厂下线数据', icon: '🏭' },
-      { label: '质检验货数据', icon: '🔍' },
-    ];
-    
-    // Preset tables config
-    const presetTables = [
-      { name: 'HAHS-2026年圣诞树1号', token: 'HrsRsQsMuhvxbOtTRahcKK3Yn4b', sheets: [
-        { id: '20698c', name: '2026年订单走货计划表' },
-        { id: 'htYQQ5', name: '7月走货' },
-      ]},
-      { name: 'JSPCWY-2026年常5号', token: 'Xt3QsCUPvhBTLktzczKcdrCpnUf', sheets: [
-        { id: 'aq6vFK', name: '2026年订单走货计划表' },
-      ]},
-    ];
-    const shippingPlanTable = { name: '走船计划表', token: 'shtcnjG4qXxYltHvcYNYTujyNrg', sheets: { plan26: 'Ocj58O', plan8: 'eOEmuF' } };
-    
-    // ===== Module 1: 走货匹配拆解 =====
-    const mod1 = reactive({
-      step: 1,
-      // 订单明细表数据源
-      orderTable: '',
-      orderSheetId: '',
-      orderUrl: '',
-      orderFile: null,
-      orderFileName: '',
-      orderSource: '',
-      orderSourceDesc: '',
-      // 走货明细表数据源
-      shippingTable: '',
-      shippingSheetId: '',
-      shippingUrl: '',
-      shippingFile: null,
-      shippingFileName: '',
-      shippingSource: '',
-      shippingSourceDesc: '',
-      // 数据
-      loading: false,
-      shippingData: [],
-      orderData: [],
-      result: null,
-      // 确认执行状态
-      confirmed: false,
-      confirmedAction: '',
-      confirmedText: '',
-    });
+        // ===== AI 助手状态 =====
+        const aiVisible = ref(false);
+        const aiInput = ref('');
+        const aiMessages = ref([]);
+        const aiQuickActions = ref([]);
+        const aiCurrentModule = ref('');
 
-    const orderFileInput = ref(null);
-    const shippingFileInput = ref(null);
-
-    // ===== 飞书数据转换函数 =====
-    function convertSheetToOrderData(rows) {
-      if (!rows || rows.length < 2) return [];
-      const headers = rows[0].map(h => String(h || '').trim());
-      const findColIndex = (keywords) => {
-        for (let i = 0; i < headers.length; i++) {
-          for (const kw of keywords) {
-            if (headers[i].includes(kw)) return i;
-          }
-        }
-        return -1;
-      };
-      const contractIdx = findColIndex(['合同号', '合同']);
-      const containerIdx = findColIndex(['货柜号', '货柜']);
-      const skuIdx = findColIndex(['SKU', 'sku', '型号']);
-      const qtyIdx = findColIndex(['数量', '走货数量', '计划走货数量']);
-      const deadlineIdx = findColIndex(['交期', '货好时间', '交货日期']);
-      const shippingIdx = findColIndex(['船期', '开船时间', '计划开船时间']);
-
-      const result = [];
-      for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        if (!row || row.length === 0) continue;
-        const sku = skuIdx >= 0 ? String(row[skuIdx] || '') : '';
-        const qty = qtyIdx >= 0 ? parseInt(row[qtyIdx]) || 0 : 0;
-        if (!sku || qty <= 0) continue;
-        result.push({
-          contract: contractIdx >= 0 ? String(row[contractIdx] || '') : '',
-          container: containerIdx >= 0 ? String(row[containerIdx] || '') : '',
-          sku: sku,
-          qty: qty,
-          deadline: deadlineIdx >= 0 ? String(row[deadlineIdx] || '') : '',
-          shipping: shippingIdx >= 0 ? String(row[shippingIdx] || '') : '',
-        });
-      }
-      return result;
-    }
-
-    function convertSheetToShippingData(rows) {
-      if (!rows || rows.length < 2) return [];
-      const headers = rows[0].map(h => String(h || '').trim());
-      const findColIndex = (keywords) => {
-        for (let i = 0; i < headers.length; i++) {
-          for (const kw of keywords) {
-            if (headers[i].includes(kw)) return i;
-          }
-        }
-        return -1;
-      };
-      const containerIdx = findColIndex(['货柜号', '货柜']);
-      const skuIdx = findColIndex(['SKU', 'sku', '型号']);
-      const qtyIdx = findColIndex(['计划走货数量', '走货数量', '数量']);
-      const dateIdx = findColIndex(['计划开船时间', '开船时间', '船期']);
-
-      const result = [];
-      for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        if (!row || row.length === 0) continue;
-        const sku = skuIdx >= 0 ? String(row[skuIdx] || '') : '';
-        const container = containerIdx >= 0 ? String(row[containerIdx] || '') : '';
-        if (!sku || !container) continue;
-        result.push({
-          container: container,
-          sku: sku,
-          qty: qtyIdx >= 0 ? parseInt(row[qtyIdx]) || 0 : 0,
-          date: dateIdx >= 0 ? String(row[dateIdx] || '') : '',
-        });
-      }
-      return result;
-    }
-
-    // 检查两个数据源是否都已配置
-    const mod1Ready = computed(() => {
-      const orderReady = (mod1.orderTable && mod1.orderSheetId) || mod1.orderUrl || mod1.orderFile;
-      const shippingReady = (mod1.shippingTable && mod1.shippingSheetId) || mod1.shippingUrl || mod1.shippingFile;
-      return orderReady && shippingReady;
-    });
-
-    // 根据选中的预设表，计算可选的sheet列表
-    const mod1OrderSheetOptions = computed(() => {
-      if (!mod1.orderTable) return [];
-      const table = presetTables.find(t => t.token === mod1.orderTable);
-      return table ? table.sheets : [];
-    });
-
-    const mod1ShippingSheetOptions = computed(() => {
-      if (!mod1.shippingTable) return [];
-      const table = presetTables.find(t => t.token === mod1.shippingTable);
-      return table ? table.sheets : [];
-    });
-
-    // 选择预设表时的回调
-    function onOrderTableChange() {
-      mod1.orderUrl = '';
-      mod1.orderSheetId = '';
-      mod1.orderFile = null;
-      mod1.orderFileName = '';
-      mod1.orderSource = '';
-      mod1.orderSourceDesc = '';
-      mod1.orderData = [];
-      // 如果该表只有一个sheet，自动选中
-      const opts = mod1OrderSheetOptions.value;
-      if (opts.length === 1) {
-        mod1.orderSheetId = opts[0].id;
-        updateOrderSourceDesc();
-      }
-    }
-
-    function onShippingTableChange() {
-      mod1.shippingUrl = '';
-      mod1.shippingSheetId = '';
-      mod1.shippingFile = null;
-      mod1.shippingFileName = '';
-      mod1.shippingSource = '';
-      mod1.shippingSourceDesc = '';
-      mod1.shippingData = [];
-      const opts = mod1ShippingSheetOptions.value;
-      if (opts.length === 1) {
-        mod1.shippingSheetId = opts[0].id;
-        updateShippingSourceDesc();
-      }
-    }
-
-    // URL输入回调：尝试自动提取sheet ID
-    function onOrderUrlChange() {
-      mod1.orderTable = '';
-      mod1.orderFile = null;
-      mod1.orderFileName = '';
-      mod1.orderData = [];
-      // 尝试从URL提取sheet参数
-      const match = mod1.orderUrl.match(/[?&]sheet=([^&#]+)/);
-      if (match) {
-        mod1.orderSheetId = match[1];
-      }
-      updateOrderSourceDesc();
-    }
-
-    function onShippingUrlChange() {
-      mod1.shippingTable = '';
-      mod1.shippingFile = null;
-      mod1.shippingFileName = '';
-      mod1.shippingData = [];
-      const match = mod1.shippingUrl.match(/[?&]sheet=([^&#]+)/);
-      if (match) {
-        mod1.shippingSheetId = match[1];
-      }
-      updateShippingSourceDesc();
-    }
-
-    // 更新数据源描述
-    function updateOrderSourceDesc() {
-      if (mod1.orderTable && mod1.orderSheetId) {
-        const table = presetTables.find(t => t.token === mod1.orderTable);
-        const sheet = table ? table.sheets.find(s => s.id === mod1.orderSheetId) : null;
-        mod1.orderSource = 'feishu';
-        mod1.orderSourceDesc = `${table ? table.name : mod1.orderTable} / ${sheet ? sheet.name : mod1.orderSheetId}`;
-      } else if (mod1.orderUrl) {
-        mod1.orderSource = 'feishu_link';
-        mod1.orderSourceDesc = mod1.orderSheetId ? `飞书链接 / Sheet:${mod1.orderSheetId}` : '飞书链接';
-      } else if (mod1.orderFile) {
-        mod1.orderSource = 'excel';
-        mod1.orderSourceDesc = '本地Excel: ' + mod1.orderFileName;
-      } else {
-        mod1.orderSource = '';
-        mod1.orderSourceDesc = '';
-      }
-    }
-
-    function updateShippingSourceDesc() {
-      if (mod1.shippingTable && mod1.shippingSheetId) {
-        const table = presetTables.find(t => t.token === mod1.shippingTable);
-        const sheet = table ? table.sheets.find(s => s.id === mod1.shippingSheetId) : null;
-        mod1.shippingSource = 'feishu';
-        mod1.shippingSourceDesc = `${table ? table.name : mod1.shippingTable} / ${sheet ? sheet.name : mod1.shippingSheetId}`;
-      } else if (mod1.shippingUrl) {
-        mod1.shippingSource = 'feishu_link';
-        mod1.shippingSourceDesc = mod1.shippingSheetId ? `飞书链接 / Sheet:${mod1.shippingSheetId}` : '飞书链接';
-      } else if (mod1.shippingFile) {
-        mod1.shippingSource = 'excel';
-        mod1.shippingSourceDesc = '本地Excel: ' + mod1.shippingFileName;
-      } else {
-        mod1.shippingSource = '';
-        mod1.shippingSourceDesc = '';
-      }
-    }
-
-    // 订单明细表上传处理
-    function triggerOrderUpload() {
-      if (orderFileInput.value) orderFileInput.value.click();
-    }
-
-    function handleOrderSelect(e) {
-      const file = e.target.files[0];
-      if (file) parseOrderExcel(file);
-    }
-
-    function handleOrderDrop(e) {
-      const file = e.dataTransfer.files[0];
-      if (file) parseOrderExcel(file);
-    }
-
-    function parseOrderExcel(file) {
-      mod1.orderFile = file;
-      mod1.orderFileName = file.name;
-      mod1.orderTable = '';
-      mod1.orderUrl = '';
-      mod1.orderSheetId = '';
-      mod1.orderSource = 'excel';
-      mod1.orderSourceDesc = '本地Excel: ' + file.name;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
-          if (jsonData.length > 0) {
-            mod1.orderData = jsonData.map(row => {
-              const headers = Object.keys(row);
-              const findCol = (keywords) => {
-                for (const h of headers) {
-                  for (const kw of keywords) {
-                    if (h.includes(kw)) return row[h];
-                  }
-                }
-                return '';
-              };
-              return {
-                contract: findCol(['合同号', '合同']),
-                container: findCol(['货柜号', '货柜']),
-                sku: findCol(['SKU', 'sku', '型号']),
-                qty: parseInt(findCol(['数量', '走货数量', '计划走货数量'])) || 0,
-                deadline: findCol(['交期', '货好时间', '交货日期']),
-                shipping: findCol(['船期', '开船时间', '计划开船时间']),
-              };
-            }).filter(r => r.sku && r.qty > 0);
-          }
-        } catch (err) {
-          console.warn('Excel解析失败:', err);
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    // 走货明细表上传处理
-    function triggerShippingUpload() {
-      if (shippingFileInput.value) shippingFileInput.value.click();
-    }
-
-    function handleShippingSelect(e) {
-      const file = e.target.files[0];
-      if (file) parseShippingExcel(file);
-    }
-
-    function handleShippingDrop(e) {
-      const file = e.dataTransfer.files[0];
-      if (file) parseShippingExcel(file);
-    }
-
-    function parseShippingExcel(file) {
-      mod1.shippingFile = file;
-      mod1.shippingFileName = file.name;
-      mod1.shippingTable = '';
-      mod1.shippingUrl = '';
-      mod1.shippingSheetId = '';
-      mod1.shippingSource = 'excel';
-      mod1.shippingSourceDesc = '本地Excel: ' + file.name;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
-          if (jsonData.length > 0) {
-            mod1.shippingData = jsonData.map(row => {
-              const headers = Object.keys(row);
-              const findCol = (keywords) => {
-                for (const h of headers) {
-                  for (const kw of keywords) {
-                    if (h.includes(kw)) return row[h];
-                  }
-                }
-                return '';
-              };
-              return {
-                container: findCol(['货柜号', '货柜']),
-                sku: findCol(['SKU', 'sku', '型号']),
-                qty: parseInt(findCol(['计划走货数量', '走货数量', '数量'])) || 0,
-                date: findCol(['计划开船时间', '开船时间', '船期']),
-              };
-            }).filter(r => r.sku && r.container);
-          }
-        } catch (err) {
-          console.warn('Excel解析失败:', err);
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    // 执行拆解：匹配 + 校验逻辑
-    async function mod1Execute() {
-      mod1.loading = true;
-
-      // 仅支持本地 Excel
-      if (mod1.orderSource !== 'excel' || mod1.shippingSource !== 'excel') {
-        alert('请上传本地 Excel 文件作为数据源。\n\n飞书表数据无法在浏览器中直接读取，请将飞书表导出为 Excel 后上传');
-        mod1.loading = false;
-        return;
-      }
-
-      // 检查数据是否已解析
-      if (mod1.orderData.length === 0 || mod1.shippingData.length === 0) {
-        alert('数据解析失败或数据为空，请重新配置数据源');
-        mod1.loading = false;
-        return;
-      }
-
-      // 使用用户实际数据执行拆解匹配
-      const shippingData = mod1.shippingData;
-      const orderData = mod1.orderData;
-
-      const errors = [];
-      const items = [];
-      
-      shippingData.forEach((s, i) => {
-        const order = orderData.find(o => o.sku === s.sku && o.container === s.container);
-        if (order) {
-          if (s.qty === order.qty) {
-            items.push({
-              contract: order.contract,
-              container: s.container,
-              sku: s.sku,
-              shippingQty: s.qty,
-              orderQty: order.qty,
-            });
-            errors.push({ valid: true, message: `${s.container} / ${s.sku} 匹配成功`, type: '正常' });
-          } else {
-            errors.push({
-              valid: false,
-              field: `${s.container} / ${s.sku}`,
-              message: `走货数量(${s.qty})与订单数量(${order.qty})不一致`,
-              type: '数量不匹配'
-            });
-          }
-        } else {
-          errors.push({
-            valid: false,
-            field: `${s.container} / ${s.sku}`,
-            message: `在订单明细表中未找到匹配的SKU`,
-            type: '未匹配'
-          });
-        }
-      });
-
-      const errorList = errors.filter(e => !e.valid);
-      const errorCount = errorList.length;
-      const successCount = items.length;
-      const totalCount = shippingData.length;
-
-      mod1.result = {
-        totalCount: totalCount,
-        successCount: successCount,
-        errorCount: errorCount,
-        verified: errorCount === 0,
-        items: items,
-        errors: errorList,
-      };
-
-      mod1.loading = false;
-      mod1.step = 2;
-      mod1.confirmed = false;
-      mod1.confirmedAction = '';
-      mod1.confirmedText = '';
-    }
-
-    async function mod1ConfirmLark() {
-      if (!mod1.result || mod1.result.errorCount > 0) return;
-
-      // 生成飞书写入指令文本
-      const lines = ['【走货拆解执行指令】'];
-      lines.push('请在飞书订单明细表中执行以下拆解结果写入：');
-      lines.push('');
-      lines.push('合同号 | 货柜号 | SKU | 走货数量 | 订单数量');
-      lines.push('--- | --- | --- | --- | ---');
-      mod1.result.items.forEach(item => {
-        lines.push(`${item.contract} | ${item.container} | ${item.sku} | ${item.shippingQty} | ${item.orderQty}`);
-      });
-      lines.push('');
-      lines.push(`总计 ${mod1.result.items.length} 条数据，守恒校验已通过。`);
-      
-      const text = lines.join('\n');
-      mod1.confirmedText = text;
-      mod1.confirmedAction = 'lark';
-      mod1.confirmed = true;
-      
-      // 复制到剪贴板
-      navigator.clipboard.writeText(text).catch(() => {
-        // 剪贴板 API 失败时不阻断流程，用户可手动复制
-      });
-    }
-
-    function mod1ConfirmExport() {
-      mod1Export();
-      mod1.confirmedAction = 'export';
-      mod1.confirmed = true;
-    }
-
-    function mod1Export() {
-      if (!mod1.result || !mod1.result.items || mod1.result.items.length === 0) {
-        alert('没有可导出的数据');
-        return;
-      }
-      const exportData = mod1.result.items.map(item => ({
-        '合同号': item.contract,
-        '货柜号': item.container,
-        'SKU': item.sku,
-        '走货数量': item.shippingQty,
-        '订单数量': item.orderQty,
-      }));
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      ws['!cols'] = [{ wch: 12 }, { wch: 18 }, { wch: 15 }, { wch: 12 }, { wch: 12 }];
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, '拆解结果');
-      const now = new Date();
-      const ts = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
-      XLSX.writeFile(wb, '拆解结果_订单明细_' + ts + '.xlsx');
-    }
-
-    function mod1Reset() {
-      mod1.step = 1;
-      mod1.orderTable = '';
-      mod1.orderSheetId = '';
-      mod1.orderUrl = '';
-      mod1.orderFile = null;
-      mod1.orderFileName = '';
-      mod1.orderSource = '';
-      mod1.orderSourceDesc = '';
-      mod1.shippingTable = '';
-      mod1.shippingSheetId = '';
-      mod1.shippingUrl = '';
-      mod1.shippingFile = null;
-      mod1.shippingFileName = '';
-      mod1.shippingSource = '';
-      mod1.shippingSourceDesc = '';
-      mod1.shippingData = [];
-      mod1.orderData = [];
-      mod1.result = null;
-      mod1.confirmed = false;
-      mod1.confirmedAction = '';
-      mod1.confirmedText = '';
-    }
-
-    // ===== Module 2: 订单明细录入 =====
-    const mod2 = reactive({
-      step: 1,
-      selectedTable: '',
-      customUrl: '',
-      fileName: '',
-      parsedData: [],
-      headers: [],
-      fieldMapping: [],
-      result: null,
-    });
-    const fileInput = ref(null);
-
-    function triggerFileUpload() {
-      if (fileInput.value) fileInput.value.click();
-    }
-
-    function handleFileSelect(e) {
-      const file = e.target.files[0];
-      if (file) parseExcelFile(file);
-    }
-
-    function handleFileDrop(e) {
-      const file = e.dataTransfer.files[0];
-      if (file) parseExcelFile(file);
-    }
-
-    function parseExcelFile(file) {
-      mod2.fileName = file.name;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
-          
-          if (jsonData.length > 0) {
-            mod2.headers = Object.keys(jsonData[0]);
-            mod2.parsedData = jsonData;
-            mod2.step = 2;
-            // Auto field mapping
-            const fieldMap = { '合同号': 'contract', 'SKU': 'sku', '数量': 'qty', '交期': 'deadline', '货柜号': 'container' };
-            mod2.fieldMapping = mod2.headers.filter(h => fieldMap[h]).map(h => ({ from: h, to: fieldMap[h] }));
-          }
-        } catch (err) {
-          alert('文件解析失败: ' + err.message);
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    function mod2Preview() {
-      mod2.step = 3;
-    }
-
-    function mod2Confirm() {
-      mod2.step = 4;
-      const successCount = mod2.parsedData.length - Math.floor(mod2.parsedData.length * 0.05);
-      const failedCount = mod2.parsedData.length - successCount;
-      mod2.result = {
-        success: successCount,
-        failed: failedCount,
-        total: mod2.parsedData.length,
-        failedDetails: failedCount > 0 ? Array.from({ length: failedCount }, (_, i) => ({
-          row: Math.floor(Math.random() * mod2.parsedData.length) + 1,
-          reason: ['SKU不存在', '数量格式错误', '合同号不匹配'][i % 3],
-        })) : [],
-      };
-    }
-
-    function mod2Reset() {
-      mod2.step = 1;
-      mod2.selectedTable = '';
-      mod2.customUrl = '';
-      mod2.fileName = '';
-      mod2.parsedData = [];
-      mod2.headers = [];
-      mod2.fieldMapping = [];
-      mod2.result = null;
-      if (fileInput.value) fileInput.value.value = '';
-    }
-
-    // ===== Module 3: 货柜计划登记 =====
-    const mod3 = reactive({
-      step: 1,
-      loading: false,
-      previewed: false,
-      planData: [],
-      result: null,
-    });
-
-    function mod3Load() {
-      mod3.loading = true;
-      setTimeout(() => {
-        mod3.planData = [
-          { id: 'GC-2026-0801', factory: 'HAHS', shipping: '2026-08-15', method: '海运', port: '深圳', cutoff: '2026-08-10', inspection: '2026-08-08', actual: '待确认', loading: '2026-08-12', booking: '2026-08-05' },
-          { id: 'GC-2026-0802', factory: 'JSPCWY', shipping: '2026-08-20', method: '海运', port: '厦门', cutoff: '2026-08-15', inspection: '2026-08-13', actual: '待确认', loading: '2026-08-17', booking: '2026-08-10' },
-          { id: 'GC-2026-0803', factory: 'HAHS', shipping: '2026-08-25', method: '陆运', port: '深圳', cutoff: '2026-08-22', inspection: '2026-08-20', actual: '待确认', loading: '2026-08-23', booking: '2026-08-18' },
-          { id: 'GC-2026-0804', factory: 'JSPCWY', shipping: '2026-09-01', method: '海运', port: '厦门', cutoff: '2026-08-27', inspection: '2026-08-25', actual: '待确认', loading: '2026-08-29', booking: '2026-08-22' },
+        const menuItems = [
+          { key: 'mod1', icon: '📦', name: '订单追踪' },
+          { key: 'mod2', icon: '📋', name: '订单走货核对' },
+          { key: 'mod3', icon: '📝', name: '订单走货登记' },
+          { key: 'mod4', icon: '🚢', name: '走船计划' },
+          { key: 'mod5', icon: '🔧', name: '数据维护' },
         ];
-        mod3.loading = false;
-        mod3.step = 2;
-        mod3.previewed = false;
-      }, 1500);
-    }
 
-    function mod3Preview() {
-      mod3.previewed = true;
-    }
+        // ===== 模块1状态 =====
+        const mod1 = reactive({
+          step: 1,
+          loading: false,
+          sheets: [],
+          selectedSheet: '',
+          headers: [],
+          data: [],
+          fieldMap: {
+            订单号: '', 客户名称: '', 产品: '', 数量: '',
+            走货日期: '', 金额: '', 备注: ''
+          },
+          startDate: '',
+          endDate: '',
+          results: [],
+          displayFields: []
+        });
 
-    function mod3Confirm() {
-      mod3.step = 3;
-      mod3.result = { success: true, message: '' };
-    }
+        // ===== 模块2状态 =====
+        const mod2 = reactive({
+          step: 1,
+          loading: false,
+          sheets: [],
+          selectedSheet: '',
+          headers: [],
+          data: [],
+          fieldMap: {
+            订单号: '', 产品: '', 数量: '', 走货日期: '', 金额: '', 备注: ''
+          },
+          startDate: '',
+          endDate: '',
+          results: [],
+          displayFields: [],
+          hasResult: false,
+          matched: 0,
+          unmatched: 0
+        });
 
-    function mod3Reset() {
-      mod3.step = 1;
-      mod3.planData = [];
-      mod3.result = null;
-      mod3.previewed = false;
-    }
+        const mod2StandardFields = [
+          { key: '订单号', label: '订单号', isLink: true },
+          { key: '产品', label: '产品', isLink: false },
+          { key: '数量', label: '数量', isLink: false },
+          { key: '走货日期', label: '走货日期', isLink: false },
+          { key: '金额', label: '金额', isLink: false },
+          { key: '备注', label: '备注', isLink: false },
+        ];
 
-    // ===== Module 4: 工厂下线数据 =====
-    const mod4 = reactive({
-      step: 1,
-      selectedTable: '',
-      inputText: '',
-      validationResults: [],
-      result: null,
-    });
+        // ===== 模块3状态 =====
+        const mod3 = reactive({
+          step: 1,
+          loadingA: false,
+          loadingB: false,
+          sheetsA: [],
+          sheetsB: [],
+          selectedSheetA: '',
+          selectedSheetB: '',
+          headersA: [],
+          headersB: [],
+          sheetAData: [],
+          sheetBData: [],
+          fieldMapA: {
+            订单号: '', 产品: '', 数量: '', 走货日期: '', 备注: ''
+          },
+          fieldMapB: {
+            订单号: '', 产品: '', 数量: '', 走货日期: '', 备注: ''
+          },
+          hasResult: false,
+          registered: 0,
+          unregistered: 0,
+          matchResults: []
+        });
 
-    const mod4ValidCount = computed(() => mod4.validationResults.filter(r => r.valid).length);
-    const mod4InvalidCount = computed(() => mod4.validationResults.filter(r => !r.valid).length);
+        const mod3StandardFields = [
+          { key: '订单号', label: '订单号' },
+          { key: '产品', label: '产品' },
+          { key: '数量', label: '数量' },
+          { key: '走货日期', label: '走货日期' },
+          { key: '备注', label: '备注' },
+        ];
 
-    function mod4Parse() {
-      const lines = mod4.inputText.split('\n').filter(l => l.trim());
-      mod4.validationResults = lines.map(line => {
-        const trimmed = line.trim();
-        const regex = /^([A-Za-z0-9]+)-([A-Za-z0-9]+)-(\d+)$/;
-        const match = trimmed.match(regex);
-        if (match) {
-          return { raw: trimmed, valid: true, contract: match[1], sku: match[2], qty: parseInt(match[3]) };
+        const mod3OrderFields = [
+          { key: '订单号', label: '订单号' },
+          { key: '产品', label: '产品' },
+          { key: '数量', label: '数量' },
+          { key: '走货日期', label: '走货日期' },
+          { key: '备注', label: '备注' },
+        ];
+
+        // ===== 模块4状态 =====
+        const mod4 = reactive({
+          step: 1,
+          loading: false,
+          sheets: [],
+          selectedSheet: '',
+          headers: [],
+          data: [],
+          fieldMap: {
+            船名航次: '', 目的港: '', 预计到达日期: '', 实际到达日期: '',
+            船期: '', 备注: ''
+          },
+          startDate: '',
+          endDate: '',
+          portFilter: '',
+          results: [],
+          displayFields: []
+        });
+
+        const mod4StandardFields = [
+          { key: '船名航次', label: '船名航次' },
+          { key: '目的港', label: '目的港' },
+          { key: '预计到达日期', label: '预计到达日期' },
+          { key: '实际到达日期', label: '实际到达日期' },
+          { key: '船期', label: '船期' },
+          { key: '备注', label: '备注' },
+        ];
+
+        // ===== 模块5状态 =====
+        const mod5 = reactive({
+          step: 1,
+          loading: false,
+          sheets: [],
+          selectedSheet: '',
+          headers: [],
+          data: [],
+          fieldMap: {},
+          displayFields: []
+        });
+
+        // ===== 标准字段定义（模块1） =====
+        const standardFields = [
+          { key: '订单号', label: '订单号' },
+          { key: '客户名称', label: '客户名称' },
+          { key: '产品', label: '产品' },
+          { key: '数量', label: '数量' },
+          { key: '走货日期', label: '走货日期' },
+          { key: '金额', label: '金额' },
+          { key: '备注', label: '备注' },
+        ];        // ===== AI 助手配置（各模块的快捷指令） =====
+        const moduleAIConfig = {
+          mod1: {
+            name: '订单追踪',
+            quickActions: [
+              '帮我查询本月所有订单',
+              '帮我筛选客户名称为XX的订单',
+              '帮我按走货日期排序',
+              '帮我导出筛选结果为Excel'
+            ]
+          },
+          mod2: {
+            name: '订单走货核对',
+            quickActions: [
+              '帮我核对今天的走货记录',
+              '帮我找出未匹配的走货记录',
+              '帮我汇总未匹配的订单号',
+              '帮我生成核对报告'
+            ]
+          },
+          mod3: {
+            name: '订单走货登记',
+            quickActions: [
+              '帮我登记今天所有走货记录到订单表',
+              '帮我更新走货数量到订单表',
+              '帮我检查哪些走货还没有登记',
+              '帮我生成登记汇总'
+            ]
+          },
+          mod4: {
+            name: '走船计划',
+            quickActions: [
+              '帮我查询本周的走船计划',
+              '帮我筛选目的港为XX的船期',
+              '帮我汇总本月所有走船安排',
+              '帮我提醒即将到来的船期'
+            ]
+          },
+          mod5: {
+            name: '数据维护',
+            quickActions: [
+              '帮我把这些数据更新到飞书表格',
+              '帮我新增记录到飞书表格',
+              '帮我删除指定条件的记录',
+              '帮我批量更新飞书表格数据'
+            ]
+          }
+        };
+
+        // ===== 方法 =====
+        function switchModule(key) {
+          currentModule.value = key;
         }
-        let error = '格式不正确';
-        if (!trimmed.includes('-')) error = '缺少分隔符"-"';
-        else if (trimmed.split('-').length !== 3) error = '应包含3个字段：合同号-SKU-数量';
-        else {
-          const parts = trimmed.split('-');
-          if (!/^\d+$/.test(parts[2])) error = '数量必须为数字，当前为: "' + parts[2] + '"';
+
+        // ===== AI 助手方法 =====
+        function openAI(moduleKey) {
+          aiCurrentModule.value = moduleKey;
+          const config = moduleAIConfig[moduleKey];
+          aiQuickActions.value = config.quickActions;
+          aiMessages.value = [
+            { role: 'bot', text: `你好！我是${config.name}模块的AI助手。你可以告诉我你想执行的操作，我会将指令复制到剪贴板，你只需前往 Coze 对话窗口粘贴发送即可。` }
+          ];
+          aiInput.value = '';
+          aiVisible.value = true;
         }
-        return { raw: trimmed, valid: false, error };
-      });
-      mod4.step = 3;
-    }
 
-    function mod4Validate() {
-      // Already validated during parse, just advance step
-      if (mod4ValidCount.value > 0) mod4.step = 4;
-    }
+        function sendAI(text) {
+          if (!text || !text.trim()) return;
+          const cmd = text.trim();
+          aiMessages.value.push({ role: 'user', text: cmd });
+          aiInput.value = '';
 
-    function mod4Confirm() {
-      const validItems = mod4.validationResults.filter(r => r.valid);
-      const failCount = validItems.length > 0 ? Math.floor(Math.random() * 2) : 0;
-      mod4.result = {
-        success: validItems.length - failCount,
-        failed: failCount,
-      };
-    }
+          // 复制到剪贴板
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(cmd).then(() => {
+              aiMessages.value[aiMessages.value.length - 1].copied = true;
+              nextTick(() => {
+                aiMessages.value.push({
+                  role: 'bot',
+                  text: '✅ 指令已复制到剪贴板！请点击此链接前往 Coze 对话窗口粘贴发送：https://www.coze.cn'
+                });
+                scrollChatToBottom();
+              });
+            }).catch(() => {
+              fallbackCopy(cmd);
+            });
+          } else {
+            fallbackCopy(cmd);
+          }
+        }
 
-    function mod4Reset() {
-      mod4.step = 1;
-      mod4.selectedTable = '';
-      mod4.inputText = '';
-      mod4.validationResults = [];
-      mod4.result = null;
-    }
+        function fallbackCopy(text) {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          try {
+            document.execCommand('copy');
+            aiMessages.value[aiMessages.value.length - 1].copied = true;
+            nextTick(() => {
+              aiMessages.value.push({
+                role: 'bot',
+                text: '✅ 指令已复制到剪贴板！请点击此链接前往 Coze 对话窗口粘贴发送：https://www.coze.cn'
+              });
+              scrollChatToBottom();
+            });
+          } catch(e) {
+            aiMessages.value.push({
+              role: 'bot',
+              text: '❌ 复制失败，请手动复制以上指令，然后前往 Coze 对话窗口粘贴发送：https://www.coze.cn'
+            });
+            scrollChatToBottom();
+          }
+          document.body.removeChild(textarea);
+        }
 
-    // ===== Module 5: 质检验货数据 =====
-    const mod5 = reactive({
-      step: 1,
-      selectedTable: '',
-      inputText: '',
-      validationResults: [],
-      result: null,
-      remainderSummary: [],
-    });
+        function scrollChatToBottom() {
+          nextTick(() => {
+            const chatArea = document.querySelector('.ai-chat-area');
+            if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+          });
+        }
 
-    const mod5ValidCount = computed(() => mod5.validationResults.filter(r => r.valid).length);
-    const mod5InvalidCount = computed(() => mod5.validationResults.filter(r => !r.valid).length);
+        // ===== 文件导入通用方法 =====
+        function triggerFileInput(mod) {
+          if (mod === 'mod1') document.querySelector('[ref="mod1FileInput"]').click();
+          else if (mod === 'mod2') document.querySelector('[ref="mod2FileInput"]').click();
+          else if (mod === 'mod3a') document.querySelector('[ref="mod3aFileInput"]').click();
+          else if (mod === 'mod3b') document.querySelector('[ref="mod3bFileInput"]').click();
+          else if (mod === 'mod4') document.querySelector('[ref="mod4FileInput"]').click();
+          else if (mod === 'mod5') document.querySelector('[ref="mod5FileInput"]').click();
+        }        function handleFileSelect(event, mod) {
+          const file = event.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const data = new Uint8Array(e.target.result);
+              const workbook = XLSX.read(data, { type: 'array' });
+              const sheetNames = workbook.SheetNames;
 
-    function mod5Parse() {
-      const lines = mod5.inputText.split('\n').filter(l => l.trim());
-      mod5.validationResults = lines.map(line => {
-        const trimmed = line.trim();
-        // Match: SU-{合同号}-{SKU}-{数量}套 [尾数{N}套]
-        const regex = /^SU-([A-Za-z0-9]+)-([A-Za-z0-9]+)-(\d+)套(?:[，,\s]*尾数(\d+)套)?$/;
-        const match = trimmed.match(regex);
-        if (match) {
-          return {
-            raw: trimmed, valid: true,
-            contract: match[1], sku: match[2],
-            qty: parseInt(match[3]),
-            remainder: match[4] ? parseInt(match[4]) : null,
+              if (mod === 'mod1') {
+                mod1.loading = true;
+                mod1.sheets = sheetNames;
+                mod1.selectedSheet = sheetNames[0];
+                loadSheetData(mod1, workbook, sheetNames[0]);
+                mod1.loading = false;
+                mod1.step = 2;
+              } else if (mod === 'mod2') {
+                mod2.loading = true;
+                mod2.sheets = sheetNames;
+                mod2.selectedSheet = sheetNames[0];
+                loadSheetData(mod2, workbook, sheetNames[0]);
+                mod2.loading = false;
+                mod2.step = 2;
+              } else if (mod === 'mod3a') {
+                mod3.loadingA = true;
+                mod3.sheetsA = sheetNames;
+                mod3.selectedSheetA = sheetNames[0];
+                loadSheetData(mod3, workbook, sheetNames[0], 'A');
+                mod3.loadingA = false;
+              } else if (mod === 'mod3b') {
+                mod3.loadingB = true;
+                mod3.sheetsB = sheetNames;
+                mod3.selectedSheetB = sheetNames[0];
+                loadSheetData(mod3, workbook, sheetNames[0], 'B');
+                mod3.loadingB = false;
+              } else if (mod === 'mod4') {
+                mod4.loading = true;
+                mod4.sheets = sheetNames;
+                mod4.selectedSheet = sheetNames[0];
+                loadSheetData(mod4, workbook, sheetNames[0]);
+                mod4.loading = false;
+                mod4.step = 2;
+              } else if (mod === 'mod5') {
+                mod5.loading = true;
+                mod5.sheets = sheetNames;
+                mod5.selectedSheet = sheetNames[0];
+                loadSheetData(mod5, workbook, sheetNames[0]);
+                mod5.loading = false;
+                mod5.step = 2;
+              }
+            } catch(err) {
+              alert('文件解析失败：' + err.message);
+            }
           };
+          reader.readAsArrayBuffer(file);
+          event.target.value = '';
         }
-        let error = '格式不正确';
-        if (!trimmed.startsWith('SU-')) error = '应以"SU-"开头';
-        else if (trimmed.split('-').length < 4) error = '字段不足，格式应为 SU-合同号-SKU-数量套';
-        else if (!trimmed.includes('套')) error = '数量后缺少"套"字';
-        else {
-          const parts = trimmed.split('-');
-          const qtyPart = parts[3] || '';
-          if (!/^\d+套/.test(qtyPart)) error = '数量格式错误，应为数字+套';
-        }
-        return { raw: trimmed, valid: false, error };
-      });
-      mod5.step = 3;
-    }
 
-    function mod5Validate() {
-      if (mod5ValidCount.value > 0) {
-        mod5.remainderSummary = mod5.validationResults
-          .filter(r => r.valid && r.remainder)
-          .map(r => ({ contract: r.contract, sku: r.sku, remainder: r.remainder }));
-        mod5.step = 4;
+        function loadSheetData(mod, workbook, sheetName, suffix) {
+          const sheet = workbook.Sheets[sheetName];
+          const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+          const headers = json.length > 0 ? Object.keys(json[0]) : [];
+
+          if (suffix === 'A') {
+            mod.headersA = headers;
+            mod.sheetAData = json;
+            autoMapFields(mod, mod.fieldMapA, headers, 'A');
+          } else if (suffix === 'B') {
+            mod.headersB = headers;
+            mod.sheetBData = json;
+            autoMapFields(mod, mod.fieldMapB, headers, 'B');
+          } else {
+            mod.headers = headers;
+            mod.data = json;
+            buildDisplayFields(mod);
+            autoMapFields(mod, mod.fieldMap, headers, '');
+          }
+        }
+
+        function autoMapFields(mod, fieldMap, headers, suffix) {
+          const fieldKeys = Object.keys(fieldMap);
+          for (const key of fieldKeys) {
+            const exact = headers.find(h => h === key || h.includes(key));
+            if (exact) {
+              fieldMap[key] = exact;
+            }
+          }
+        }
+
+        function buildDisplayFields(mod) {
+          mod.displayFields = [];
+          for (const [key, headerName] of Object.entries(mod.fieldMap)) {
+            if (headerName) {
+              mod.displayFields.push({ key: headerName, label: key });
+            }
+          }
+        }
+
+        function onSheetChange(mod) {
+          // 重新选择Sheet时需要重新读取文件，这里简化处理
+          // 实际场景中需要重新触发文件选择
+        }
+
+        // ===== 模块1: 查询执行 =====
+        function executeMod1Query() {
+          buildDisplayFields(mod1);
+          const dateField = mod1.fieldMap['走货日期'];
+          if (!dateField) {
+            mod1.results = mod1.data;
+            return;
+          }
+          mod1.results = mod1.data.filter(row => {
+            const dateVal = String(row[dateField] || '');
+            if (!mod1.startDate && !mod1.endDate) return true;
+            const d = parseDate(dateVal);
+            if (!d) return false;
+            if (mod1.startDate && d < new Date(mod1.startDate)) return false;
+            if (mod1.endDate && d > new Date(mod1.endDate)) return false;
+            return true;
+          });
+        }
+
+        // ===== 模块2: 核对执行 =====
+        function executeMod2Check() {
+          buildDisplayFields(mod2);
+          const orderField = mod2.fieldMap['订单号'];
+          // 尝试从模块1获取已导入的订单数据
+          const orders = mod1.data;
+          const orderFieldMod1 = mod1.fieldMap['订单号'];
+
+          let matched = 0;
+          let unmatched = 0;
+
+          // 先筛选日期
+          const dateField = mod2.fieldMap['走货日期'];
+          let filtered = mod2.data;
+          if (dateField && (mod2.startDate || mod2.endDate)) {
+            filtered = filtered.filter(row => {
+              const d = parseDate(String(row[dateField] || ''));
+              if (!d) return false;
+              if (mod2.startDate && d < new Date(mod2.startDate)) return false;
+              if (mod2.endDate && d > new Date(mod2.endDate)) return false;
+              return true;
+            });
+          }
+
+          filtered.forEach(row => {
+            const orderNo = String(row[orderField] || '').trim();
+            if (!orderNo || !orderFieldMod1 || orders.length === 0) {
+              row._matched = false;
+              unmatched++;
+              return;
+            }
+            const found = orders.some(o => String(o[orderFieldMod1] || '').trim() === orderNo);
+            row._matched = found;
+            if (found) matched++; else unmatched++;
+          });
+
+          mod2.filtered = filtered;
+          mod2.matched = matched;
+          mod2.unmatched = unmatched;
+          mod2.hasResult = true;
+        }        // ===== 模块3: 走货登记 =====
+        function executeMod3Register() {
+          const orderFieldA = mod3.fieldMapA['订单号'];
+          const orderFieldB = mod3.fieldMapB['订单号'];
+          const productFieldA = mod3.fieldMapA['产品'];
+          const productFieldB = mod3.fieldMapB['产品'];
+          const qtyFieldA = mod3.fieldMapA['数量'];
+          const qtyFieldB = mod3.fieldMapB['数量'];
+          const dateFieldA = mod3.fieldMapA['走货日期'];
+          const dateFieldB = mod3.fieldMapB['走货日期'];
+
+          let registered = 0;
+          let unregistered = 0;
+          const results = [];
+
+          mod3.sheetAData.forEach(shipRow => {
+            const orderNo = String(shipRow[orderFieldA] || '').trim();
+            const product = String(shipRow[productFieldA] || '').trim();
+            const qty = shipRow[qtyFieldA];
+
+            // 在订单表中查找匹配
+            const match = mod3.sheetBData.find(orderRow => {
+              const oNo = String(orderRow[orderFieldB] || '').trim();
+              const oProd = String(orderRow[productFieldB] || '').trim();
+              if (orderNo && oNo && orderNo === oNo) {
+                if (!product || !oProd || product === oProd) return true;
+              }
+              return false;
+            });
+
+            if (match) {
+              // 找到匹配，更新订单表数量
+              const origQty = Number(match[qtyFieldB]) || 0;
+              const shipQty = Number(qty) || 0;
+              match[qtyFieldB] = origQty + shipQty;
+              registered++;
+              results.push({
+                shipping: `订单:${orderNo} 产品:${product} 数量:${qty}`,
+                order: `匹配到订单 ${orderNo}，数量已更新: ${origQty} + ${shipQty} = ${origQty + shipQty}`,
+                matched: true
+              });
+            } else {
+              unregistered++;
+              results.push({
+                shipping: `订单:${orderNo} 产品:${product} 数量:${qty}`,
+                order: '',
+                matched: false
+              });
+            }
+          });
+
+          mod3.matchResults = results;
+          mod3.registered = registered;
+          mod3.unregistered = unregistered;
+          mod3.hasResult = true;
+        }
+
+        // ===== 模块4: 走船查询 =====
+        function executeMod4Query() {
+          buildDisplayFields(mod4);
+          const dateField = mod4.fieldMap['预计到达日期'] || mod4.fieldMap['实际到达日期'];
+          const portField = mod4.fieldMap['目的港'];
+
+          let filtered = mod4.data;
+
+          // 日期筛选
+          if (dateField && (mod4.startDate || mod4.endDate)) {
+            filtered = filtered.filter(row => {
+              const d = parseDate(String(row[dateField] || ''));
+              if (!d) return false;
+              if (mod4.startDate && d < new Date(mod4.startDate)) return false;
+              if (mod4.endDate && d > new Date(mod4.endDate)) return false;
+              return true;
+            });
+          }
+
+          // 目的港筛选
+          if (portField && mod4.portFilter) {
+            const keyword = mod4.portFilter.trim().toLowerCase();
+            filtered = filtered.filter(row => {
+              const port = String(row[portField] || '').toLowerCase();
+              return port.includes(keyword);
+            });
+          }
+
+          mod4.results = filtered;
+        }
+
+        // ===== 工具函数 =====
+        function formatCell(row, field) {
+          const val = row[field.key];
+          if (val === undefined || val === null || val === '') return '-';
+          return String(val);
+        }
+
+        function parseDate(str) {
+          if (!str) return null;
+          // 尝试多种日期格式
+          // Excel 数字日期
+          if (typeof str === 'number') {
+            const d = new Date((str - 25569) * 86400000);
+            return isNaN(d) ? null : d;
+          }
+          str = String(str).trim();
+          // yyyy-mm-dd / yyyy/mm/dd
+          let m = str.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+          if (m) return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+          // yyyyMMdd
+          m = str.match(/^(\d{4})(\d{2})(\d{2})$/);
+          if (m) return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+          // mm/dd/yyyy
+          m = str.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+          if (m) return new Date(Number(m[3]), Number(m[1])-1, Number(m[2]));
+          return null;
+        }
+
+        function resetMod1() {
+          mod1.step = 1;
+          mod1.sheets = [];
+          mod1.selectedSheet = '';
+          mod1.headers = [];
+          mod1.data = [];
+          mod1.fieldMap = { 订单号:'', 客户名称:'', 产品:'', 数量:'', 走货日期:'', 金额:'', 备注:'' };
+          mod1.results = [];
+          mod1.displayFields = [];
+          mod1.startDate = '';
+          mod1.endDate = '';
+        }
+
+        function resetMod4() {
+          mod4.step = 1;
+          mod4.sheets = [];
+          mod4.selectedSheet = '';
+          mod4.headers = [];
+          mod4.data = [];
+          mod4.fieldMap = { 船名航次:'', 目的港:'', 预计到达日期:'', 实际到达日期:'', 船期:'', 备注:'' };
+          mod4.results = [];
+          mod4.displayFields = [];
+          mod4.startDate = '';
+          mod4.endDate = '';
+          mod4.portFilter = '';
+        }
+
+        function resetMod5() {
+          mod5.step = 1;
+          mod5.sheets = [];
+          mod5.selectedSheet = '';
+          mod5.headers = [];
+          mod5.data = [];
+          mod5.fieldMap = {};
+          mod5.displayFields = [];
+        }
+
+        return {
+          sidebarCollapsed, currentModule, menuItems, switchModule,
+          mod1, mod2, mod3, mod4, mod5,
+          standardFields, mod2StandardFields, mod3StandardFields, mod3OrderFields, mod4StandardFields, mod5StandardFields: [
+            { key: '订单号', label: '订单号' },
+            { key: '客户名称', label: '客户名称' },
+            { key: '产品', label: '产品' },
+            { key: '数量', label: '数量' },
+            { key: '走货日期', label: '走货日期' },
+            { key: '金额', label: '金额' },
+            { key: '备注', label: '备注' },
+          ],
+          // AI 助手
+          aiVisible, aiInput, aiMessages, aiQuickActions, openAI, sendAI,
+          // 文件处理
+          triggerFileInput, handleFileSelect, loadSheetData, onSheetChange,
+          // 查询
+          executeMod1Query, executeMod2Check, executeMod3Register, executeMod4Query,
+          // 工具
+          formatCell, parseDate, resetMod1, resetMod4, resetMod5,
+          // refs
+          mod1FileInput: ref(null),
+          mod2FileInput: ref(null),
+          mod3aFileInput: ref(null),
+          mod3bFileInput: ref(null),
+          mod4FileInput: ref(null),
+          mod5FileInput: ref(null),
+          aiChatArea: ref(null)
+        };
       }
-    }
-
-    function mod5Confirm() {
-      const validItems = mod5.validationResults.filter(r => r.valid);
-      const failCount = validItems.length > 0 ? Math.floor(Math.random() * 2) : 0;
-      mod5.result = {
-        success: validItems.length - failCount,
-        failed: failCount,
-      };
-    }
-
-    function mod5Reset() {
-      mod5.step = 1;
-      mod5.selectedTable = '';
-      mod5.inputText = '';
-      mod5.validationResults = [];
-      mod5.result = null;
-      mod5.remainderSummary = [];
-    }
-
-    // ===== AI Assistant Modal =====
-    const aiModal = reactive({
-      show: false,
-      module: '',
-      moduleName: '',
-      welcome: '',
-      inputText: '',
-      messages: [],
-      quickActions: [],
-      sending: false,
     });
-    const aiChatArea = ref(null);
 
-    // 不自动跳转，用户手动打开扣子对话窗口
-
-    const moduleAIConfig = {
-      mod1: {
-        name: '走货匹配拆解',
-        welcome: '你好！我可以帮你执行走货匹配拆解的飞书表读写操作。\n\n请描述你要执行的操作，或点击下方快捷按钮。我会将指令发送到 AI Agent 执行飞书写入。',
-        quickActions: [
-          { label: '📖 读取订单表数据', cmd: '请帮我读取 HAHS 2026年订单走货计划表的数据' },
-          { label: '📖 读取走货表数据', cmd: '请帮我读取 HAHS 7月走货表的数据' },
-          { label: '✅ 确认写入拆解结果', cmd: '请确认写入拆解结果到飞书表' },
-          { label: '📊 查看走船计划', cmd: '请帮我查看26年走船计划表' },
-        ],
-      },
-      mod2: {
-        name: '订单明细录入',
-        welcome: '你好！我可以帮你将订单数据录入飞书表格。\n\n请描述你要录入的内容，或点击下方快捷按钮。',
-        quickActions: [
-          { label: '📝 录入HAHS订单', cmd: '请将订单数据录入到 HAHS 2026年订单走货计划表' },
-          { label: '📝 录入JSPCWY订单', cmd: '请将订单数据录入到 JSPCWY 2026年订单走货计划表' },
-          { label: '📖 查看已录入数据', cmd: '请帮我查看当前订单表中的数据' },
-        ],
-      },
-      mod3: {
-        name: '货柜计划登记',
-        welcome: '你好！我可以帮你将货柜计划数据从8月货柜计划表写入26年走船计划表。\n\n请描述你的操作需求，或点击下方快捷按钮。',
-        quickActions: [
-          { label: '📥 加载货柜计划', cmd: '请帮我从8月货柜计划表加载数据' },
-          { label: '✅ 确认写入走船计划', cmd: '请将货柜数据写入26年走船计划表' },
-          { label: '📖 查看走船计划', cmd: '请帮我查看当前26年走船计划表的内容' },
-        ],
-      },
-      mod4: {
-        name: '工厂下线数据',
-        welcome: '你好！我可以帮你录入工厂下线数据到飞书表格。\n\n请描述你要录入的数据，或点击下方快捷按钮。',
-        quickActions: [
-          { label: '📝 录入下线数据', cmd: '请帮我将工厂下线数据录入飞书表' },
-          { label: '📖 查看已录入数据', cmd: '请帮我查看当前工厂下线数据表' },
-        ],
-      },
-      mod5: {
-        name: '质检验货数据',
-        welcome: '你好！我可以帮你录入质检验货数据到飞书表格，支持尾数处理。\n\n请描述你要录入的数据，或点击下方快捷按钮。',
-        quickActions: [
-          { label: '📝 录入质检数据', cmd: '请帮我将质检验货数据录入飞书表' },
-          { label: '📦 处理尾数数据', cmd: '请帮我处理质检尾数数据' },
-          { label: '📖 查看质检记录', cmd: '请帮我查看当前质检记录' },
-        ],
-      },
-    };
-
-    function openAI(moduleKey) {
-      const config = moduleAIConfig[moduleKey];
-      if (!config) return;
-      aiModal.module = moduleKey;
-      aiModal.moduleName = config.name;
-      aiModal.welcome = config.welcome;
-      aiModal.quickActions = config.quickActions || [];
-      aiModal.messages = [];
-      aiModal.inputText = '';
-      aiModal.show = true;
-      aiModal.sending = false;
-    }
-
-    function closeAI() {
-      aiModal.show = false;
-    }
-
-    function sendAI(cmd) {
-      const text = cmd || aiModal.inputText.trim();
-      if (!text) return;
-
-      // Add user message
-      aiModal.messages.push({ role: 'user', text: text });
-      aiModal.inputText = '';
-      aiModal.sending = true;
-
-      // Scroll to bottom
-      setTimeout(() => {
-        if (aiChatArea.value) aiChatArea.value.scrollTop = aiChatArea.value.scrollHeight;
-      }, 50);
-
-      // Copy command to clipboard and open Coze link
-      const fullCmd = `【${aiModal.moduleName}】${text}`;
-      navigator.clipboard.writeText(fullCmd).then(() => {
-        // Simulate bot response
-        setTimeout(() => {
-          aiModal.messages.push({
-            role: 'bot',
-            text: `✅ 指令已复制到剪贴板！<br><br>请前往扣子(Coze)对话窗口，将指令粘贴发送给「超卷小助手」即可执行飞书操作。<br><br>💡 <a href='https://www.coze.cn' target='_blank' style='color:#722ed1;text-decoration:underline'>点击打开 Coze</a>`,
-          });
-          aiModal.sending = false;
-          setTimeout(() => {
-            if (aiChatArea.value) aiChatArea.value.scrollTop = aiChatArea.value.scrollHeight;
-          }, 50);
-          // 不自动跳转，让用户自行打开扣子对话
-        }, 800);
-      }).catch(() => {
-        // Clipboard failed, still provide the link
-        setTimeout(() => {
-          aiModal.messages.push({
-            role: 'bot',
-            text: `⚠️ 剪贴板复制失败，请手动复制以下指令：<br><br><code style="background:#f5f5f5;padding:8px;border-radius:4px;display:block;font-size:12px;word-break:break-all">${fullCmd}</code><br>点击下方按钮打开 AI 助手对话窗口，将上方内容粘贴发送。`,
-          });
-          aiModal.sending = false;
-          setTimeout(() => {
-            if (aiChatArea.value) aiChatArea.value.scrollTop = aiChatArea.value.scrollHeight;
-          }, 50);
-        }, 800);
-      });
-    }
-
-    return {
-      sidebarCollapsed, currentModule, menuItems,
-      presetTables, shippingPlanTable,
-      // Module 1
-      mod1, mod1Ready, mod1OrderSheetOptions, mod1ShippingSheetOptions,
-      orderFileInput, shippingFileInput,
-      onOrderTableChange, onOrderUrlChange, onShippingTableChange, onShippingUrlChange,
-      triggerOrderUpload, handleOrderSelect, handleOrderDrop,
-      triggerShippingUpload, handleShippingSelect, handleShippingDrop,
-      mod1Execute, mod1Reset, mod1Export, mod1ConfirmLark, mod1ConfirmExport,
-      // Module 2
-      mod2, fileInput, triggerFileUpload, handleFileSelect, handleFileDrop,
-      mod2Preview, mod2Confirm, mod2Reset,
-      // Module 3
-      mod3, mod3Load, mod3Preview, mod3Confirm, mod3Reset,
-      // Module 4
-      mod4, mod4ValidCount, mod4InvalidCount,
-      mod4Parse, mod4Validate, mod4Confirm, mod4Reset,
-      // Module 5
-      mod5, mod5ValidCount, mod5InvalidCount,
-      mod5Parse, mod5Validate, mod5Confirm, mod5Reset,
-      // AI Assistant
-      aiModal, aiChatArea, openAI, closeAI, sendAI,
-    };
-  }
-});
-
-try { app.use(antd.default || antd); } catch(e) { console.warn('Antd init skipped:', e); }
-app.mount('#app');
-</script>
+    // 注册 Ant Design Vue 组件（简化版，仅注册常用组件）
+    app.use(antd);
+    app.mount('#app');
+  </script>
 </body>
 </html>
